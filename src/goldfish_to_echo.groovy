@@ -2,13 +2,13 @@
 
 @Grab(group = 'org.apache.commons', module = 'commons-csv', version = '1.6')
 
-import groovy.transform.Immutable
+import groovy.transform.Canonical
 import groovy.transform.Sortable
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVRecord
 
-@Immutable
+@Canonical
 @Sortable
 class Entry {
     String name
@@ -95,17 +95,8 @@ entriesToSkip.each { final Entry entryToSkip ->
         // just remove it
         entries.remove(matchingEntry)
     } else {
-        // remove existing matching entry and add new one with updated quantity
-        entries.remove(matchingEntry)
-        entries.add(
-            new Entry(
-                name: matchingEntry.name,
-                setCode: matchingEntry.setCode,
-                setName: matchingEntry.setName,
-                quantity: matchingEntry.quantity - entryToSkip.quantity,
-                isFoil: false
-            )
-        )
+        // update quantity
+        matchingEntry.quantity -= entryToSkip.quantity
     }
 }
 
