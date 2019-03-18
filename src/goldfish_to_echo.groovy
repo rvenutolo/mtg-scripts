@@ -99,6 +99,24 @@ new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
 }
 
 
+// Add some entries to main list, such as non-English cards and Beta basics
+
+new File('add_to_import.csv').withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withHeader(
+        'Name', 'Set Code', 'Quantity', 'Language'
+    ).parse(reader).each { final CSVRecord csvRecord ->
+        entries << new Entry(
+            name: csvRecord.get('Name'),
+            setName: echoSets[csvRecord.get('Set Code')],
+            setCode: csvRecord.get('Set Code'),
+            quantity: csvRecord.get('Quantity') as int,
+            isFoil: false, // currently don't have any foils to add
+            language: csvRecord.get('Language') ?: 'EN'
+        )
+    }
+}
+
+
 // Find entries with set names and codes not in EchoMTG set data and fail if there are any
 
 final Set<Tuple2<String, String>> badGoldfishSets =
@@ -141,7 +159,7 @@ new File('skip_import.csv').withReader('UTF-8') { final Reader reader ->
 
 entriesToSkip.each { final Entry entryToSkip ->
     final List<Entry> matchingEntries = entries.findAll {
-        it.name == entryToSkip.name && it.setCode == entryToSkip.setCode
+        it.name == entryToSkip.name && it.setCode == entryToSkip.setCode && it.language == entryToSkip.language
     }
     if (matchingEntries.empty) {
         throw new IllegalStateException(
@@ -218,12 +236,12 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
 }
 
 
-// Output entries I need to handle manually to stderr
-
-printNotImportedEntries('Cards with multiple artworks in set', entriesWithMultipleArtworks)
-printNotImportedEntries('Split cards that cannot be imported to Echo', splitCardEntries)
-
-
-// Output skipped entries to stderr
-
-printNotImportedEntries('Cards skipped in import', entriesToSkip)
+//// Output entries I need to handle manually to stderr
+//
+//printNotImportedEntries('Cards with multiple artworks in set', entriesWithMultipleArtworks)
+//printNotImportedEntries('Split cards that cannot be imported to Echo', splitCardEntries)
+//
+//
+//// Output skipped entries to stderr
+//
+//printNotImportedEntries('Cards skipped in import', entriesToSkip)
