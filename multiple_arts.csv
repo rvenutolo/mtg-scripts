@@ -1,71 +1,3 @@
-ATQ,Mishra's Factory
-ATQ,Strip Mine
-ATQ,Urza's Mine
-ATQ,Urza's Power Plant
-ATQ,Urza's Tower
-FEM,Armor Thrull
-FEM,Basal Thrull
-FEM,Brassclaw Orcs
-FEM,Combat Medic
-FEM,Dwarven Soldier
-FEM,Elven Fortress
-FEM,Elvish Hunter
-FEM,Elvish Scout
-FEM,Farrel's Zealot
-FEM,Goblin Chirurgeon
-FEM,Goblin Grenade
-FEM,Goblin War Drums
-FEM,High Tide
-FEM,Homarid
-FEM,Homarid Warrior
-FEM,Hymn to Tourach
-FEM,Icatian Infantry
-FEM,Icatian Javelineers
-FEM,Icatian Moneychanger
-FEM,Icatian Scout
-FEM,Initiates of the Ebon Hand
-FEM,Merseine
-FEM,Mindstab Thrull
-FEM,Necrite
-FEM,Night Soil
-FEM,Orcish Spy
-FEM,Orcish Veteran
-FEM,Order of Leitbur
-FEM,Order of the Ebon Hand
-FEM,Spore Cloud
-FEM,Thallid
-FEM,Thorn Thallid
-FEM,Tidal Flats
-FEM,Vodalian Mage
-FEM,Vodalian Soldiers
-CHR,Urza's Mine
-CHR,Urza's Power Plant
-CHR,Urza's Tower
-HML,Abbey Matron
-HML,Aliban's Tower
-HML,Ambush Party
-HML,Anaba Bodyguard
-HML,Anaba Shaman
-HML,Aysen Bureaucrats
-HML,Carapace
-HML,Cemetery Gate
-HML,Dark Maze
-HML,Dry Spell
-HML,Dwarven Trader
-HML,Feast of the Unicorn
-HML,Folk of An-Havva
-HML,Giant Albatross
-HML,Hungry Mist
-HML,Labyrinth Minotaur
-HML,Memory Lapse
-HML,Mesa Falcon
-HML,Reef Pirates
-HML,Samite Alchemist
-HML,Sengir Bats
-HML,Shrink
-HML,Torture
-HML,Trade Caravan
-HML,Willow Faerie
 ALL,Aesthir Glider
 ALL,Agent of Stromgald
 ALL,Arcane Denial
@@ -121,8 +53,76 @@ ALL,Viscerid Armor
 ALL,Whip Vine
 ALL,Wild Aesthir
 ALL,Yavimaya Ancients
+ATQ,Mishra's Factory
+ATQ,Strip Mine
+ATQ,Urza's Mine
+ATQ,Urza's Power Plant
+ATQ,Urza's Tower
 CHK,Brothers Yamazaki
-PLS,"Tahngarth, Talruum Hero"
+CHR,Urza's Mine
+CHR,Urza's Power Plant
+CHR,Urza's Tower
+CN2,"Kaya, Ghost Assassin"
+FEM,Armor Thrull
+FEM,Basal Thrull
+FEM,Brassclaw Orcs
+FEM,Combat Medic
+FEM,Dwarven Soldier
+FEM,Elven Fortress
+FEM,Elvish Hunter
+FEM,Elvish Scout
+FEM,Farrel's Zealot
+FEM,Goblin Chirurgeon
+FEM,Goblin Grenade
+FEM,Goblin War Drums
+FEM,High Tide
+FEM,Homarid
+FEM,Homarid Warrior
+FEM,Hymn to Tourach
+FEM,Icatian Infantry
+FEM,Icatian Javelineers
+FEM,Icatian Moneychanger
+FEM,Icatian Scout
+FEM,Initiates of the Ebon Hand
+FEM,Merseine
+FEM,Mindstab Thrull
+FEM,Necrite
+FEM,Night Soil
+FEM,Orcish Spy
+FEM,Orcish Veteran
+FEM,Order of Leitbur
+FEM,Order of the Ebon Hand
+FEM,Spore Cloud
+FEM,Thallid
+FEM,Thorn Thallid
+FEM,Tidal Flats
+FEM,Vodalian Mage
+FEM,Vodalian Soldiers
+HML,Abbey Matron
+HML,Aliban's Tower
+HML,Ambush Party
+HML,Anaba Bodyguard
+HML,Anaba Shaman
+HML,Aysen Bureaucrats
+HML,Carapace
+HML,Cemetery Gate
+HML,Dark Maze
+HML,Dry Spell
+HML,Dwarven Trader
+HML,Feast of the Unicorn
+HML,Folk of An-Havva
+HML,Giant Albatross
+HML,Hungry Mist
+HML,Labyrinth Minotaur
+HML,Memory Lapse
+HML,Mesa Falcon
+HML,Reef Pirates
+HML,Samite Alchemist
+HML,Sengir Bats
+HML,Shrink
+HML,Torture
+HML,Trade Caravan
+HML,Willow Faerie
 PLS,"Ertai, the Corrupted"
 PLS,Skyship Weatherlight
-CN2,"Kaya, Ghost Assassin"
+PLS,"Tahngarth, Talruum Hero"
