@@ -189,7 +189,7 @@ entries.removeAll(splitCardEntries)
 
 CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
     csvPrinter.printRecord('Reg Qty', 'Foil Qty', 'Name', 'Set', 'Acquired', 'Language')
-    entries.toSorted().each { final Entry entry ->
+    entries.sort().each { final Entry entry ->
         csvPrinter.printRecord(
             entry.isFoil ? 0 : entry.quantity,
             entry.isFoil ? entry.quantity : 0,
