@@ -50,6 +50,47 @@ inputStream.withReader('UTF-8') { final Reader reader ->
 }
 
 
+// MTGGoldfish and EchoMTG do not use all the same set names
+// Read data to convert MTGGoldfish set names to those used by EchoMTG
+
+final Map<String, String> goldfishToEchoSets = [:]
+
+new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withHeader('Goldfish', 'Echo').parse(reader).each { final CSVRecord csvRecord ->
+        goldfishToEchoSets[csvRecord.get('Goldfish')] = csvRecord.get('Echo')
+    }
+}
+
+
+// Update set names as necessary
+
+entries.findAll { it.setName in goldfishToEchoSets.keySet() }.each { it.setName = goldfishToEchoSets[it.setName] }
+
+
+// Read the EchoMTG set names to use in validation of set names
+
+final Set<String> echoSetNames = []
+
+new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
+        final String setName = csvRecord.get('Name')
+        if (echoSetNames.contains(setName)) {
+            // this is to catch multiple 'Revised' sets (original English white border and foreign black border)
+            throw new IllegalArgumentException("Multiple sets with name: ${setName}")
+        }
+        echoSetNames << setName
+    }
+}
+
+// Find entries with sets not in EchoMTG set data and fail if there are any
+
+final Set<String> badGoldfishSetNames = entries.collect { it.setName }.findAll { !(it in echoSetNames) }.toSet().sort()
+
+if (badGoldfishSetNames) {
+    throw new IllegalArgumentException("MTGGoldfish sets not in EchoMTG: ${badGoldfishSetNames.join(', ')}")
+}
+
+
 // There are some entries I do not want to import from MTGGoldfish to EchoMTG
 // Read those entries and remove them from the main list
 
