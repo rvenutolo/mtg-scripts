@@ -186,6 +186,7 @@ entriesToSkip.each { final Entry entryToSkip ->
 
 
 // MTGGoldfish CSV does not distinctly identify different artworks for basic lands, so just remove all basic lands
+// Basic lands I care to import (ex Beta basics) are added from file elsewhere
 
 entries.removeIf { it.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] }
 
