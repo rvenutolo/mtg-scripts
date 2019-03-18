@@ -50,13 +50,15 @@ inputStream.withReader('UTF-8') { final Reader reader ->
 }
 
 
-// MTGGoldfish and EchoMTG do not use all the same set names
-// Read data to convert MTGGoldfish set names to those used by EchoMTG
+// MTGGoldfish and EchoMTG do not use all the same set names and codes
+// Read data to convert MTGGoldfish set names and codes to those used by EchoMTG
 
 final Map<Tuple2<String, String>, Tuple2<String, String>> goldfishToEchoSets = [:]
 
 new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader ->
-    CSVFormat.DEFAULT.withHeader('Goldfish Name', 'Goldfish Code', 'Echo Name', 'Echo Code').parse(reader).each { final CSVRecord csvRecord ->
+    CSVFormat.DEFAULT.withHeader(
+        'Goldfish Name', 'Goldfish Code', 'Echo Name', 'Echo Code'
+    ).parse(reader).each { final CSVRecord csvRecord ->
         final Tuple2<String, String> goldfishSet =
             new Tuple2<>(csvRecord.get('Goldfish Name'), csvRecord.get('Goldfish Code'))
         final Tuple2<String, String> echoSet =
@@ -66,7 +68,7 @@ new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader 
 }
 
 
-// Update set names as necessary
+// Update set names and codes as necessary
 
 entries.each {
     final Tuple2<String, String> goldfishSet = new Tuple2<>(it.setName, it.setCode)
@@ -77,7 +79,8 @@ entries.each {
     }
 }
 
-// Read the EchoMTG set names to use in validation of set names
+
+// Read the EchoMTG set data to use in validation of set names and codes
 
 final Map<String, String> echoSets = [:]
 
@@ -93,7 +96,8 @@ new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
     }
 }
 
-// Find entries with sets not in EchoMTG set data and fail if there are any
+
+// Find entries with set names and codes not in EchoMTG set data and fail if there are any
 
 final Set<Tuple2<String, String>> badGoldfishSets =
     entries.findAll {
@@ -102,11 +106,11 @@ final Set<Tuple2<String, String>> badGoldfishSets =
         new Tuple2<String, String>(it.setCode, it.setName)
     }.toSet()
 
-
 if (badGoldfishSets) {
-    final String badSetsString = badGoldfishSets.collect{"${it.second},${it.first}"}.sort().join('\n')
+    final String badSetsString = badGoldfishSets.collect { "${it.second},${it.first}" }.sort().join('\n')
     throw new IllegalArgumentException("MTGGoldfish sets not in EchoMTG set data:\n${badSetsString}")
 }
+
 
 // There are some entries I do not want to import from MTGGoldfish to EchoMTG
 // Read those entries and remove them from the main list
@@ -124,6 +128,7 @@ new File('skip_import.csv').withReader('UTF-8') { final Reader reader ->
         )
     }
 }
+
 
 // Remove entries from main list that are in the skip list
 // May need to re-adjust quantity (ex: main list has quantity of 8, but skip list has 4)
@@ -194,9 +199,8 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
             entry.isFoil ? 0 : entry.quantity,
             entry.isFoil ? entry.quantity : 0,
             entry.name,
-            // Echo will import successfully if using set code,
-            // however it will import the wrong set (possibly defaults to using the earliest set for the card)
-            // so use full set name
+            // Echo will import successfully if using set code, but it will import the wrong set, so use full set name
+            // ex: 'Dark Ritual,3ED' will import as the Alpha version
             entry.setName,
             '',
             'EN'
