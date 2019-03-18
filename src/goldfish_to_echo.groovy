@@ -12,8 +12,8 @@ import org.apache.commons.csv.CSVRecord
 @Sortable
 class Entry {
     String name
-    String setCode
     String setName
+    String setCode
     int quantity
     boolean isFoil
 }
@@ -41,8 +41,8 @@ inputStream.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
         entries << new Entry(
             name: csvRecord.get('Card'),
-            setCode: csvRecord.get('Set ID'),
             setName: csvRecord.get('Set Name'),
+            setCode: csvRecord.get('Set ID'),
             quantity: csvRecord.get('Quantity') as int,
             isFoil: csvRecord.get('Foil') == 'FOIL'
         )
@@ -53,43 +53,60 @@ inputStream.withReader('UTF-8') { final Reader reader ->
 // MTGGoldfish and EchoMTG do not use all the same set names
 // Read data to convert MTGGoldfish set names to those used by EchoMTG
 
-final Map<String, String> goldfishToEchoSets = [:]
+final Map<Tuple2<String, String>, Tuple2<String, String>> goldfishToEchoSets = [:]
 
 new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader ->
-    CSVFormat.DEFAULT.withHeader('Goldfish', 'Echo').parse(reader).each { final CSVRecord csvRecord ->
-        goldfishToEchoSets[csvRecord.get('Goldfish')] = csvRecord.get('Echo')
+    CSVFormat.DEFAULT.withHeader('Goldfish Name', 'Goldfish Code', 'Echo Name', 'Echo Code').parse(reader).each { final CSVRecord csvRecord ->
+        final Tuple2<String, String> goldfishSet =
+            new Tuple2<>(csvRecord.get('Goldfish Name'), csvRecord.get('Goldfish Code'))
+        final Tuple2<String, String> echoSet =
+            new Tuple2<>(csvRecord.get('Echo Name'), csvRecord.get('Echo Code'))
+        goldfishToEchoSets[goldfishSet] = echoSet
     }
 }
 
 
 // Update set names as necessary
 
-entries.findAll { it.setName in goldfishToEchoSets.keySet() }.each { it.setName = goldfishToEchoSets[it.setName] }
-
+entries.each {
+    final Tuple2<String, String> goldfishSet = new Tuple2<>(it.setName, it.setCode)
+    if (goldfishSet in goldfishToEchoSets.keySet()) {
+        final Tuple2<String, String> echoSet = goldfishToEchoSets[goldfishSet]
+        it.setName = echoSet.first
+        it.setCode = echoSet.second
+    }
+}
 
 // Read the EchoMTG set names to use in validation of set names
 
-final Set<String> echoSetNames = []
+final Map<String, String> echoSets = [:]
 
 new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
         final String setName = csvRecord.get('Name')
-        if (echoSetNames.contains(setName)) {
+        final String setCode = csvRecord.get('Code')
+        if (echoSets.keySet().contains(setName)) {
             // this is to catch multiple 'Revised' sets (original English white border and foreign black border)
             throw new IllegalArgumentException("Multiple sets with name: ${setName}")
         }
-        echoSetNames << setName
+        echoSets[setCode] = setName
     }
 }
 
 // Find entries with sets not in EchoMTG set data and fail if there are any
 
-final Set<String> badGoldfishSetNames = entries.collect { it.setName }.findAll { !(it in echoSetNames) }.toSet().sort()
+final Set<Tuple2<String, String>> badGoldfishSets =
+    entries.findAll {
+        !(it.setCode in echoSets.keySet()) || (it.setName != echoSets[it.setCode])
+    }.collect {
+        new Tuple2<String, String>(it.setCode, it.setName)
+    }.toSet()
 
-if (badGoldfishSetNames) {
-    throw new IllegalArgumentException("MTGGoldfish sets not in EchoMTG: ${badGoldfishSetNames.join(', ')}")
+
+if (badGoldfishSets) {
+    final String badSetsString = badGoldfishSets.collect{"${it.second},${it.first}"}.sort().join('\n')
+    throw new IllegalArgumentException("MTGGoldfish sets not in EchoMTG set data:\n${badSetsString}")
 }
-
 
 // There are some entries I do not want to import from MTGGoldfish to EchoMTG
 // Read those entries and remove them from the main list
