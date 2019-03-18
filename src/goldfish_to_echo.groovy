@@ -228,7 +228,7 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
             entry.name,
             // Echo will import successfully if using set code, but it may import the wrong set, so use full set name
             // ex: 'Dark Ritual,CST' will import as the A25 version,
-            // but 'Dark Ritual,MMQ' will import as the correct version
+            //     but 'Dark Ritual,MMQ' will import as the correct version
             entry.setName,
             '',
             entry.language
