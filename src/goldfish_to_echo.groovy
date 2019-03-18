@@ -185,10 +185,11 @@ entriesToSkip.each { final Entry entryToSkip ->
 }
 
 
-// MTGGoldfish CSV does not distinctly identify different artworks for basic lands, so just remove all basic lands
+// MTGGoldfish CSV does not distinctly identify different artworks for basic lands,
+// and they're generally not of much value, so just remove all non-Unstable basics
 // Basic lands I care to import (ex Beta basics) are added from file elsewhere
 
-entries.removeIf { it.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] }
+entries.removeIf { it.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && it.setCode != 'UN3' }
 
 
 // There are a number of cards that have multiple artworks in the same set
