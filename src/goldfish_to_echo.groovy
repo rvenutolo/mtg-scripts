@@ -46,7 +46,7 @@ inputStream.withReader('UTF-8') { final Reader reader ->
             setCode: csvRecord.get('Set ID'),
             quantity: csvRecord.get('Quantity') as int,
             isFoil: csvRecord.get('Foil') == 'FOIL',
-            language: 'EN'
+            language: 'EN' // MTGGoldfish does not track language, so default to English
         )
     }
 }
@@ -111,7 +111,7 @@ new File('add_to_import.csv').withReader('UTF-8') { final Reader reader ->
             setCode: csvRecord.get('Set Code'),
             quantity: csvRecord.get('Quantity') as int,
             isFoil: false, // currently don't have any foils to add
-            language: csvRecord.get('Language') ?: 'EN'
+            language: csvRecord.get('Language') ?: 'EN' // if not specified, use English
         )
     }
 }
@@ -145,7 +145,7 @@ new File('skip_import.csv').withReader('UTF-8') { final Reader reader ->
             setName: '',
             quantity: csvRecord.get('Quantity') as int,
             isFoil: false, // currently don't have any foils to skip,
-            language: 'EN'
+            language: 'EN' // currently dont' have any non-English to skip
         )
     }
 }
@@ -230,7 +230,7 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
             // ex: 'Dark Ritual,CST' will import as the A25 version,
             //     but 'Dark Ritual,MMQ' will import as the correct version
             entry.setName,
-            '',
+            '', // acquired price field
             entry.language
         )
     }
