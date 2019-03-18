@@ -16,6 +16,7 @@ class Entry {
     String setCode
     int quantity
     boolean isFoil
+    String language
 }
 
 static void printNotImportedEntries(final String message, final List<Entry> entries) {
@@ -44,7 +45,8 @@ inputStream.withReader('UTF-8') { final Reader reader ->
             setName: csvRecord.get('Set Name'),
             setCode: csvRecord.get('Set ID'),
             quantity: csvRecord.get('Quantity') as int,
-            isFoil: csvRecord.get('Foil') == 'FOIL'
+            isFoil: csvRecord.get('Foil') == 'FOIL',
+            language: 'EN'
         )
     }
 }
@@ -124,7 +126,8 @@ new File('skip_import.csv').withReader('UTF-8') { final Reader reader ->
             setCode: csvRecord.get('Set'),
             setName: '',
             quantity: csvRecord.get('Quantity') as int,
-            isFoil: false // currently don't have any foils to skip
+            isFoil: false, // currently don't have any foils to skip,
+            language: 'EN'
         )
     }
 }
@@ -209,7 +212,7 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
             // but 'Dark Ritual,MMQ' will import as the correct version
             entry.setName,
             '',
-            'EN'
+            entry.language
         )
     }
 }
