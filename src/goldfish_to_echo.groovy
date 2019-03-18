@@ -22,7 +22,7 @@ static void printNotImportedEntries(final String message, final List<Entry> entr
     System.err.println('-' * 80)
     System.err.println(message)
     System.err.println('')
-    entries.each { System.err.println("${it.name}${it.isFoil ? ' (foil)' : ''} - ${it.setCode} - ${it.quantity}") }
+    entries.each { System.err.println("${it.name}${it.isFoil ? ' (FOIL)' : ''} - ${it.setCode} - ${it.quantity}") }
     System.err.println('')
 }
 
