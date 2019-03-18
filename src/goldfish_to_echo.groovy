@@ -236,12 +236,12 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
 }
 
 
-//// Output entries I need to handle manually to stderr
-//
-//printNotImportedEntries('Cards with multiple artworks in set', entriesWithMultipleArtworks)
-//printNotImportedEntries('Split cards that cannot be imported to Echo', splitCardEntries)
-//
-//
-//// Output skipped entries to stderr
-//
-//printNotImportedEntries('Cards skipped in import', entriesToSkip)
+// Output entries I need to handle manually to stderr
+
+printNotImportedEntries('Cards with multiple artworks in set', entriesWithMultipleArtworks)
+printNotImportedEntries('Split cards that cannot be imported to Echo', splitCardEntries)
+
+
+// Output skipped entries to stderr
+
+printNotImportedEntries('Cards skipped in import', entriesToSkip)
