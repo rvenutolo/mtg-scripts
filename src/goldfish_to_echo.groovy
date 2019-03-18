@@ -136,7 +136,10 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
             entry.isFoil ? 0 : entry.quantity,
             entry.isFoil ? entry.quantity : 0,
             entry.name,
-            entry.setCode,
+            // Echo will import successfully if using set code,
+            // however it will import the wrong set (possibly defaults to using the earliest set for the card)
+            // so use full set name
+            entry.setName,
             '',
             'EN'
         )
