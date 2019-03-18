@@ -164,6 +164,11 @@ entriesToSkip.each { final Entry entryToSkip ->
 }
 
 
+// MTGGoldfish CSV does not distinctly identify different artworks for basic lands, so just remove all basic lands
+
+entries.removeIf{ it.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes']}
+
+
 // There are a number of cards that have multiple artworks in the same set
 // Ex: Hymn to Tourach and High Tide in Fallen Empires
 // The MTGGoldfish CSV does not distinctly identify these
