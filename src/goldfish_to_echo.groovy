@@ -199,8 +199,9 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
             entry.isFoil ? 0 : entry.quantity,
             entry.isFoil ? entry.quantity : 0,
             entry.name,
-            // Echo will import successfully if using set code, but it will import the wrong set, so use full set name
-            // ex: 'Dark Ritual,3ED' will import as the Alpha version
+            // Echo will import successfully if using set code, but it may import the wrong set, so use full set name
+            // ex: 'Dark Ritual,CST' will import as the A25 version,
+            // but 'Dark Ritual,MMQ' will import as the correct version
             entry.setName,
             '',
             'EN'
