@@ -101,7 +101,7 @@ new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
 
 // Add some entries to main list, such as non-English cards and Beta basics
 
-new File('add_to_import.csv').withReader('UTF-8') { final Reader reader ->
+new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader(
         'Name', 'Set Code', 'Quantity', 'Language'
     ).parse(reader).each { final CSVRecord csvRecord ->
@@ -137,7 +137,7 @@ if (badGoldfishSets) {
 
 final List<Entry> entriesToSkip = []
 
-new File('skip_import.csv').withReader('UTF-8') { final Reader reader ->
+new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Set', 'Quantity').parse(reader).each { final CSVRecord csvRecord ->
         entriesToSkip << new Entry(
             name: csvRecord.get('Name'),
@@ -198,7 +198,7 @@ entries.removeIf { it.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp'
 
 final Map<String, List<String>> cardsWithMultipleArtworks = [:].withDefault { [] }
 
-new File('multiple_arts.csv').withReader('UTF-8') { final Reader reader ->
+new File('cards_with_multiple_artworks.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Set', 'Name').parse(reader).each { final CSVRecord csvRecord ->
         cardsWithMultipleArtworks[csvRecord.get('Set').trim()] << csvRecord.get('Name').trim()
     }
