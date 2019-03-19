@@ -1,11 +1,9 @@
 #!/usr/bin/env groovy
-
 @Grab(group = 'org.apache.commons', module = 'commons-csv', version = '1.6')
 
 import groovy.transform.Canonical
 import groovy.transform.Sortable
 import org.apache.commons.csv.CSVFormat
-import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVRecord
 
 @Canonical
@@ -92,7 +90,7 @@ new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
 // Find entries with set names and codes not in EchoMTG set data and fail if there are any
 
 final Set<Tuple2<String, String>> badGoldfishSets =
-    goldfishList.collect{ it.first }.findAll {
+    goldfishList.collect { it.first }.findAll {
         !(it.setCode in echoSets.keySet()) || (it.setName != echoSets[it.setCode])
     }.collect {
         new Tuple2<String, String>(it.setCode, it.setName)
@@ -101,4 +99,14 @@ final Set<Tuple2<String, String>> badGoldfishSets =
 if (badGoldfishSets) {
     final String badSetsString = badGoldfishSets.collect { "${it.second},${it.first}" }.sort().join('\n')
     throw new IllegalArgumentException("MTGGoldfish sets not in EchoMTG set data:\n${badSetsString}")
+}
+
+
+// Combine MTGGoldfish counts
+// MTGGoldfish doesn't distinctly identify multiple arts or full arts in same set,
+// but have separate entries with the same name for them, so just combine the counts
+
+final Map<Card, Integer> goldfishCardCounts = [:].withDefault { 0 }
+goldfishList.each {
+    goldfishCardCounts[it.first] += it.second
 }
