@@ -132,6 +132,13 @@ if (badGoldfishSets) {
 }
 
 
+// Basic lands, aside from those from Unstable, were not included in import from MTGGoldfish into EchoMTG,
+// so remove them
+goldfishList.removeIf {
+    it.first.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && it.first.setCode != 'UN3'
+}
+
+
 // Combine MTGGoldfish counts
 // MTGGoldfish doesn't distinctly identify multiple arts or full arts in same set,
 // but have separate entries with the same name for them, so just combine the counts
@@ -156,11 +163,11 @@ goldfishCardCounts.findAll { final Card card, final int goldfishCount ->
 }.sort().each { final Card card, final int goldfishCount ->
     println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${goldfishCount - echoCardCounts[card]}")
 }
-println()
-println('Cards in EchoMTG not in MTGGoldfish')
-println('-' * 80)
-echoCardCounts.findAll { final Card card, final int echoCount ->
-    echoCount > goldfishCardCounts[card]
-}.sort().each { final Card card, final int echoCount ->
-    println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${echoCount - goldfishCardCounts[card]}")
-}
+//println()
+//println('Cards in EchoMTG not in MTGGoldfish')
+//println('-' * 80)
+//echoCardCounts.findAll { final Card card, final int echoCount ->
+//    echoCount > goldfishCardCounts[card]
+//}.sort().each { final Card card, final int echoCount ->
+//    println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${echoCount - goldfishCardCounts[card]}")
+//}
