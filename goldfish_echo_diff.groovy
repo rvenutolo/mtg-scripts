@@ -145,3 +145,22 @@ goldfishList.each { goldfishCardCounts[it.first] += it.second }
 
 final Map<Card, Integer> echoCardCounts = [:].withDefault { 0 }
 echoList.each { echoCardCounts[it.first] += it.second }
+
+
+// Print diff info
+
+println('Cards in MTGGoldfish not in EchoMTG')
+println('-' * 80)
+goldfishCardCounts.sort().findAll { final Card card, final int goldfishCount ->
+    goldfishCount > echoCardCounts[card]
+}.each { final Card card, final int goldfishCount ->
+    println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${goldfishCount - echoCardCounts[card]}")
+}
+println()
+println('Cards in EchoMTG not in MTGGoldfish')
+println('-' * 80)
+echoCardCounts.sort().findAll { final Card card, final int echoCount ->
+    echoCount > goldfishCardCounts[card]
+}.each { final Card card, final int echoCount ->
+    println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${echoCount - goldfishCardCounts[card]}")
+}
