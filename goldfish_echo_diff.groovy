@@ -1,4 +1,5 @@
 #!/usr/bin/env groovy
+
 @Grab(group = 'org.apache.commons', module = 'commons-csv', version = '1.6')
 
 import groovy.transform.Canonical
