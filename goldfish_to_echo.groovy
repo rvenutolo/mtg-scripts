@@ -127,7 +127,7 @@ if (badGoldfishSets) {
 
 
 // There are some entries I do not want to import from MTGGoldfish to EchoMTG
-// Read those entries and remove them from the main list
+// Read those entries
 
 final List<Entry> entriesToSkip = []
 
