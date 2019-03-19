@@ -28,14 +28,7 @@ final Map<String, String> echoSets = [:]
 
 new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
-        final String setName = csvRecord.get('Name')
-        final String setCode = csvRecord.get('Code')
-        if (echoSets.keySet().contains(setName)) {
-            // TODO check on this
-            // this is to catch multiple 'Revised' sets (original English white border and foreign black border)
-            throw new IllegalArgumentException("Multiple sets with name: ${setName}")
-        }
-        echoSets[setCode] = setName
+        echoSets[csvRecord.get('Code')] = csvRecord.get('Name')
     }
 }
 
