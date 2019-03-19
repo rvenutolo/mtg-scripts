@@ -58,9 +58,8 @@ final List<Tuple2<Card, Integer>> echoList = []
 
 echoFile.withReader('UTF-8') { final Reader reader ->
     // EchoMTG only supplies set names and not code, so construct a map to look up set codes
-    final Map<String, String> setNameToCodeMap = echoSets.entrySet().collectEntries { [(it.value) : it.key] }
+    final Map<String, String> setNameToCodeMap = echoSets.entrySet().collectEntries { [(it.value): it.key] }
     CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
-        // Count,Name,Foil,Edition,acquired_price,tcg_mid,tcg_low,foil_price,Condition,Language
         final int nonFoilQuantity = csvRecord.get('Count') as int
         final int foilQuantity = csvRecord.get('Foil') as int
         final String name = csvRecord.get('Name')
@@ -118,7 +117,7 @@ goldfishList.collect { it.first }.each {
 }
 
 
-// Find entries with set names and codes not in EchoMTG set data and fail if there are any
+// Find MTGGoldfish cards with set names and codes not in EchoMTG set data and fail if there are any
 
 final Set<Tuple2<String, String>> badGoldfishSets =
     goldfishList.collect { it.first }.findAll {
@@ -138,15 +137,11 @@ if (badGoldfishSets) {
 // but have separate entries with the same name for them, so just combine the counts
 
 final Map<Card, Integer> goldfishCardCounts = [:].withDefault { 0 }
-goldfishList.each {
-    goldfishCardCounts[it.first] += it.second
-}
+goldfishList.each { goldfishCardCounts[it.first] += it.second }
 
 
 // Combine EchMTG counts
 // EchoMTG puts one card per row, so need to combine the counts
 
 final Map<Card, Integer> echoCardCounts = [:].withDefault { 0 }
-echoList.each {
-    echoCardCounts[it.first] += it.second
-}
+echoList.each { echoCardCounts[it.first] += it.second }
