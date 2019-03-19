@@ -46,8 +46,8 @@ goldfishFile.withReader('UTF-8') { final Reader reader ->
             setCode: csvRecord.get('Set ID'),
             isFoil: csvRecord.get('Foil') == 'FOIL'
         )
-        final int quantity = csvRecord.get('Quantity') as int
-        goldfishList << new Tuple2<Card, Integer>(card, quantity)
+        final int count = csvRecord.get('Quantity') as int
+        goldfishList << new Tuple2<Card, Integer>(card, count)
     }
 }
 
@@ -60,28 +60,28 @@ echoFile.withReader('UTF-8') { final Reader reader ->
     // EchoMTG only supplies set names and not code, so construct a map to look up set codes
     final Map<String, String> setNameToCodeMap = echoSets.entrySet().collectEntries { [(it.value): it.key] }
     CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
-        final int nonFoilQuantity = csvRecord.get('Count') as int
-        final int foilQuantity = csvRecord.get('Foil') as int
+        final int nonFoilCount = csvRecord.get('Count') as int
+        final int foilCount = csvRecord.get('Foil') as int
         final String name = csvRecord.get('Name')
         final String setName = csvRecord.get('Edition')
         final String setCode = setNameToCodeMap[setName]
-        if (nonFoilQuantity) {
+        if (nonFoilCount) {
             final Card nonFoilCard = new Card(
                 name: name,
                 setName: setName,
                 setCode: setCode,
                 isFoil: false
             )
-            echoList << new Tuple2<Card, Integer>(nonFoilCard, nonFoilQuantity)
+            echoList << new Tuple2<Card, Integer>(nonFoilCard, nonFoilCount)
         }
-        if (foilQuantity) {
+        if (foilCount) {
             final Card foilCard = new Card(
                 name: name,
                 setName: setName,
                 setCode: setCode,
                 isFoil: true
             )
-            echoList << new Tuple2<Card, Integer>(foilCard, foilQuantity)
+            echoList << new Tuple2<Card, Integer>(foilCard, foilCount)
         }
     }
 }
@@ -151,16 +151,16 @@ echoList.each { echoCardCounts[it.first] += it.second }
 
 println('Cards in MTGGoldfish not in EchoMTG')
 println('-' * 80)
-goldfishCardCounts.sort().findAll { final Card card, final int goldfishCount ->
+goldfishCardCounts.findAll { final Card card, final int goldfishCount ->
     goldfishCount > echoCardCounts[card]
-}.each { final Card card, final int goldfishCount ->
+}.sort().each { final Card card, final int goldfishCount ->
     println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${goldfishCount - echoCardCounts[card]}")
 }
 println()
 println('Cards in EchoMTG not in MTGGoldfish')
 println('-' * 80)
-echoCardCounts.sort().findAll { final Card card, final int echoCount ->
+echoCardCounts.findAll { final Card card, final int echoCount ->
     echoCount > goldfishCardCounts[card]
-}.each { final Card card, final int echoCount ->
+}.sort().each { final Card card, final int echoCount ->
     println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${echoCount - goldfishCardCounts[card]}")
 }

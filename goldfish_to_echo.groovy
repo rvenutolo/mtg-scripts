@@ -14,7 +14,7 @@ class Entry {
     String name
     String setName
     String setCode
-    int quantity
+    int count
     boolean isFoil
     String language
 }
@@ -23,7 +23,9 @@ static void printNotImportedEntries(final String message, final List<Entry> entr
     System.err.println('-' * 80)
     System.err.println(message)
     System.err.println('')
-    entries.each { System.err.println("${it.name}${it.isFoil ? ' (FOIL)' : ''} - ${it.setCode} - ${it.quantity}") }
+    entries.sort().each {
+        System.err.println("${it.name}${it.isFoil ? ' (FOIL)' : ''} - ${it.setCode} - ${it.count}")
+    }
     System.err.println('')
 }
 
@@ -44,7 +46,7 @@ inputStream.withReader('UTF-8') { final Reader reader ->
             name: csvRecord.get('Card'),
             setName: csvRecord.get('Set Name'),
             setCode: csvRecord.get('Set ID'),
-            quantity: csvRecord.get('Quantity') as int,
+            count: csvRecord.get('Quantity') as int,
             isFoil: csvRecord.get('Foil') == 'FOIL',
             language: 'EN' // MTGGoldfish does not track language, so default to English
         )
@@ -97,13 +99,13 @@ new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
 
 new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader(
-        'Name', 'Set Code', 'Quantity', 'Language'
+        'Name', 'Set Code', 'Count', 'Language'
     ).parse(reader).each { final CSVRecord csvRecord ->
         entries << new Entry(
             name: csvRecord.get('Name'),
             setName: echoSets[csvRecord.get('Set Code')],
             setCode: csvRecord.get('Set Code'),
-            quantity: csvRecord.get('Quantity') as int,
+            count: csvRecord.get('Count') as int,
             isFoil: false, // currently don't have any foils to add
             language: csvRecord.get('Language') ?: 'EN' // if not specified, use English
         )
@@ -132,12 +134,12 @@ if (badGoldfishSets) {
 final List<Entry> entriesToSkip = []
 
 new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
-    CSVFormat.DEFAULT.withHeader('Name', 'Set', 'Quantity').parse(reader).each { final CSVRecord csvRecord ->
+    CSVFormat.DEFAULT.withHeader('Name', 'Set', 'Count').parse(reader).each { final CSVRecord csvRecord ->
         entriesToSkip << new Entry(
             name: csvRecord.get('Name'),
             setCode: csvRecord.get('Set'),
             setName: '',
-            quantity: csvRecord.get('Quantity') as int,
+            count: csvRecord.get('Count') as int,
             isFoil: false, // currently don't have any foils to skip,
             language: 'EN' // currently dont' have any non-English to skip
         )
@@ -146,7 +148,7 @@ new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
 
 
 // Remove entries from main list that are in the skip list
-// May need to re-adjust quantity (ex: main list has quantity of 8, but skip list has 4)
+// May need to re-adjust count (ex: main list has count of 8, but skip list has 4)
 //
 // Also ensure that skip list is up-to-date
 // by failing if there is something in the skip list that is not in the main list
@@ -165,16 +167,16 @@ entriesToSkip.each { final Entry entryToSkip ->
         )
     }
     final Entry matchingEntry = matchingEntries.first()
-    if (matchingEntry.quantity < entryToSkip.quantity) {
+    if (matchingEntry.count < entryToSkip.count) {
         throw new IllegalStateException(
-            "MTGGoldfish collection does not contain at least ${entryToSkip.quantity} ${entryToSkip.name}/${entryToSkip.setCode}"
+            "MTGGoldfish collection does not contain at least ${entryToSkip.count} ${entryToSkip.name}/${entryToSkip.setCode}"
         )
-    } else if (matchingEntry.quantity == entryToSkip.quantity) {
+    } else if (matchingEntry.count == entryToSkip.count) {
         // just remove it
         entries.remove(matchingEntry)
     } else {
-        // update quantity
-        matchingEntry.quantity -= entryToSkip.quantity
+        // update count
+        matchingEntry.count -= entryToSkip.count
     }
 }
 
@@ -218,8 +220,8 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
     csvPrinter.printRecord('Reg Qty', 'Foil Qty', 'Name', 'Set', 'Acquired', 'Language')
     entries.sort().each { final Entry entry ->
         csvPrinter.printRecord(
-            entry.isFoil ? 0 : entry.quantity,
-            entry.isFoil ? entry.quantity : 0,
+            entry.isFoil ? 0 : entry.count,
+            entry.isFoil ? entry.count : 0,
             entry.name,
             // Echo will import successfully if using set code, but it may import the wrong set, so use full set name
             // ex: 'Dark Ritual,CST' will import as the A25 version,
