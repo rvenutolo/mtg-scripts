@@ -22,6 +22,24 @@ if (args?.size() != 2) {
 final File goldfishFile = new File(args[0])
 final File echoFile = new File(args[1])
 
+// Read the EchoMTG set data to use in validation of set names and codes
+
+final Map<String, String> echoSets = [:]
+
+new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
+        final String setName = csvRecord.get('Name')
+        final String setCode = csvRecord.get('Code')
+        if (echoSets.keySet().contains(setName)) {
+            // TODO check on this
+            // this is to catch multiple 'Revised' sets (original English white border and foreign black border)
+            throw new IllegalArgumentException("Multiple sets with name: ${setName}")
+        }
+        echoSets[setCode] = setName
+    }
+}
+
+
 // Read MTGGoldfish collection data
 
 final List<Tuple2<Card, Integer>> goldfishList = []
@@ -36,6 +54,42 @@ goldfishFile.withReader('UTF-8') { final Reader reader ->
         )
         final int quantity = csvRecord.get('Quantity') as int
         goldfishList << new Tuple2<Card, Integer>(card, quantity)
+    }
+}
+
+
+// Read EchoMTG collection data
+
+final List<Tuple2<Card, Integer>> echoList = []
+
+echoFile.withReader('UTF-8') { final Reader reader ->
+    // EchoMTG only supplies set names and not code, so construct a map to look up set codes
+    final Map<String, String> setNameToCodeMap = echoSets.entrySet().collectEntries { [(it.value) : it.key] }
+    CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
+        // Count,Name,Foil,Edition,acquired_price,tcg_mid,tcg_low,foil_price,Condition,Language
+        final int nonFoilQuantity = csvRecord.get('Count') as int
+        final int foilQuantity = csvRecord.get('Foil') as int
+        final String name = csvRecord.get('Name')
+        final String setName = csvRecord.get('Edition')
+        final String setCode = setNameToCodeMap[setName]
+        if (nonFoilQuantity) {
+            final Card nonFoilCard = new Card(
+                name: name,
+                setName: setName,
+                setCode: setCode,
+                isFoil: false
+            )
+            echoList << new Tuple2<Card, Integer>(nonFoilCard, nonFoilQuantity)
+        }
+        if (foilQuantity) {
+            final Card foilCard = new Card(
+                name: name,
+                setName: setName,
+                setCode: setCode,
+                isFoil: true
+            )
+            echoList << new Tuple2<Card, Integer>(foilCard, foilQuantity)
+        }
     }
 }
 
@@ -70,23 +124,6 @@ goldfishList.collect { it.first }.each {
 }
 
 
-// Read the EchoMTG set data to use in validation of set names and codes
-
-final Map<String, String> echoSets = [:]
-
-new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
-    CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
-        final String setName = csvRecord.get('Name')
-        final String setCode = csvRecord.get('Code')
-        if (echoSets.keySet().contains(setName)) {
-            // this is to catch multiple 'Revised' sets (original English white border and foreign black border)
-            throw new IllegalArgumentException("Multiple sets with name: ${setName}")
-        }
-        echoSets[setCode] = setName
-    }
-}
-
-
 // Find entries with set names and codes not in EchoMTG set data and fail if there are any
 
 final Set<Tuple2<String, String>> badGoldfishSets =
@@ -109,4 +146,13 @@ if (badGoldfishSets) {
 final Map<Card, Integer> goldfishCardCounts = [:].withDefault { 0 }
 goldfishList.each {
     goldfishCardCounts[it.first] += it.second
+}
+
+
+// Combine EchMTG counts
+// EchoMTG puts one card per row, so need to combine the counts
+
+final Map<Card, Integer> echoCardCounts = [:].withDefault { 0 }
+echoList.each {
+    echoCardCounts[it.first] += it.second
 }
