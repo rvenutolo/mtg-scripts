@@ -140,7 +140,7 @@ new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
             setCode: csvRecord.get('Set'),
             setName: '',
             count: csvRecord.get('Count') as int,
-            isFoil: false, // currently don't have any foils to skip,
+            isFoil: false, // currently don't have any foils to skip
             language: 'EN' // currently dont' have any non-English to skip
         )
     }
@@ -148,7 +148,7 @@ new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
 
 
 // Remove entries from main list that are in the skip list
-// May need to re-adjust count (ex: main list has count of 8, but skip list has 4)
+// May need to adjust count (ex: main list has count of 8, but skip list has 4)
 //
 // Also ensure that skip list is up-to-date
 // by failing if there is something in the skip list that is not in the main list
