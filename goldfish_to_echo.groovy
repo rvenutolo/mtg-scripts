@@ -20,30 +20,6 @@ if (args && args.size() != 1) {
     throw new IllegalArgumentException("Expected at most one argument: ${args}")
 }
 
-
-// Read MTGGoldfish collection to import to EchoMTG
-
-final InputStream inputStream = args ? new File(args[0]).newInputStream() : System.in
-
-final CardCollection goldfishCollection = new CardCollection()
-
-inputStream.withReader('UTF-8') { final Reader reader ->
-    CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
-        final Card card = new Card(
-            name: csvRecord.get('Card'),
-            set: new CardSet(
-                setName: csvRecord.get('Set Name'),
-                setCode: csvRecord.get('Set ID')
-            ),
-            isFoil: csvRecord.get('Foil') == 'FOIL',
-            language: 'EN' // MTGGoldfish does not track language, so default to English
-        )
-        final count = csvRecord.get('Quantity') as int
-        goldfishCollection.addCards(card, count)
-    }
-}
-
-
 // MTGGoldfish and EchoMTG do not use all the same set names and codes
 // Read data to convert MTGGoldfish set names and codes to those used by EchoMTG
 
@@ -65,18 +41,29 @@ new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader 
     }
 }
 
-// Create collection to import to EchoMTG, reading from MTGGoldfish and converting sets as necessary
 
-final CardCollection echoCollection = new CardCollection()
+// Read MTGGoldfish collection to import to EchoMTG,
+// converting sets as necessary
 
-goldfishCollection.cardCounts.each {
-    final Card card = new Card(
-        name: it.name,
-        set: goldfishToEchoSets[it.set] ?: it.set,
-        isFoil: it.isFoil,
-        language: it.language
-    )
-    echoCollection.addCards(card, it.count)
+final InputStream inputStream = args ? new File(args[0]).newInputStream() : System.in
+
+final CardCollection cardCollection = new CardCollection()
+
+inputStream.withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
+        final CardSet goldfishSet = new CardSet(
+            setName: csvRecord.get('Set Name'),
+            setCode: csvRecord.get('Set ID')
+        )
+        final Card card = new Card(
+            name: csvRecord.get('Card'),
+            set: goldfishToEchoSets[goldfishSet] ?: goldfishSet,
+            isFoil: csvRecord.get('Foil') == 'FOIL',
+            language: 'EN' // MTGGoldfish does not track language, so default to English
+        )
+        final count = csvRecord.get('Quantity') as int
+        cardCollection.addCards(card, count)
+    }
 }
 
 
@@ -91,7 +78,7 @@ new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
 }
 
 
-// Add some cards to EchoMTG collection, such as non-English cards and Beta basics
+// Add some cards to collection, such as non-English cards and Beta basics
 
 new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader(
@@ -107,13 +94,13 @@ new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
             language: csvRecord.get('Language') ?: 'EN' // if not specified, use English
         )
         final int count = csvRecord.get('Count') as int
-        echoCollection.addCards(card, count)
+        cardCollection.addCards(card, count)
     }
 }
 
 // Go through collection to find set names and codes not in EchoMTG and fail if there are any
 
-final List<CardSet> badCardSets = echoCollection.cardSets.findAll {
+final List<CardSet> badCardSets = cardCollection.cardSets.findAll {
     !(it.setCode in echoSets.keySet()) || (it.setName != echoSets[it.setCode])
 }
 if (badCardSets) {
@@ -138,7 +125,7 @@ new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
             language: 'EN' // currently dont' have any non-English to skip
         )
         final int count = csvRecord.get('Count') as int
-        echoCollection.removeCards(card, count)
+        cardCollection.removeCards(card, count)
         skippedCards << new CardCount(card, count)
     }
 }
@@ -148,18 +135,17 @@ new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
 // and they're generally not of much value, so just remove all non-Unstable basics
 // Basic lands I care to import (ex Beta basics) are added from file elsewhere
 
-echoCollection.cardCounts.findAll {
+cardCollection.cardCounts.findAll {
     it.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && it.setCode != 'UN3'
 }.each {
-    echoCollection.removeCards(it.card, it.count)
+    cardCollection.removeCards(it.card, it.count)
 }
-
 
 
 // There are a number of cards that have multiple artworks in the same set
 // Ex: Hymn to Tourach and High Tide in Fallen Empires
 // The MTGGoldfish CSV does not distinctly identify these
-// Collect these for later output and remove them from EchoMTG collection
+// Collect these for later output and remove them
 
 final Map<String, List<String>> multipleArtworks = [:].withDefault { [] }
 
@@ -169,22 +155,22 @@ new File('cards_with_multiple_artworks.csv').withReader('UTF-8') { final Reader 
     }
 }
 
-final List<CardCount> cardsWithMultipleArtworks = echoCollection.cardCounts.findAll {
+final List<CardCount> cardsWithMultipleArtworks = cardCollection.cardCounts.findAll {
     multipleArtworks[it.setCode].contains(it.name)
 }
 cardsWithMultipleArtworks.each {
-    echoCollection.removeCards(it.card, it.count)
+    cardCollection.removeCards(it.card, it.count)
 }
 
 
 // EchoMTG CSV import does not handle split cards
-// Collect these cards for output later and remove them from EchoMTG collection
+// Collect these cards for output later and remove them
 
-final List<CardCount> splitCards = echoCollection.cardCounts.findAll {
+final List<CardCount> splitCards = cardCollection.cardCounts.findAll {
     it.name.contains('/')
 }
 splitCards.each {
-    echoCollection.removeCards(it.card, it.count)
+    cardCollection.removeCards(it.card, it.count)
 }
 
 
@@ -192,7 +178,7 @@ splitCards.each {
 
 CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
     csvPrinter.printRecord('Reg Qty', 'Foil Qty', 'Name', 'Set', 'Acquired', 'Language')
-    echoCollection.cardCounts.each {
+    cardCollection.cardCounts.each {
         csvPrinter.printRecord(
             it.isFoil ? 0 : it.count,
             it.isFoil ? it.count : 0,
