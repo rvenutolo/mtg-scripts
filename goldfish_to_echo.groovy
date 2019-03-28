@@ -10,8 +10,10 @@ static void printNotImportedCards(final String message, final List<CardCount> ca
     System.err.println('-' * 80)
     System.err.println(message)
     System.err.println('')
-    cards.each.sort() {
-        System.err.println("${it.name}${it.isFoil ? ' (FOIL)' : ''} - ${it.setCode} - ${it.count}")
+    cards.each.sort() { final CardCount cardCoun ->
+        System.err.println(
+            "${cardCoun.name}${cardCoun.isFoil ? ' (FOIL)' : ''} - ${cardCoun.setCode} - ${cardCoun.count}"
+        )
     }
     System.err.println('')
 }
@@ -100,8 +102,8 @@ new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
 
 // Go through collection to find set names and codes not in EchoMTG and fail if there are any
 
-final List<CardSet> badCardSets = cardCollection.cardSets.findAll {
-    !(it.setCode in echoSets.keySet()) || (it.setName != echoSets[it.setCode])
+final List<CardSet> badCardSets = cardCollection.cardSets.findAll { final CardSet cardSet ->
+    !(cardSet.setCode in echoSets.keySet()) || (cardSet.setName != echoSets[cardSet.setCode])
 }
 if (badCardSets) {
     throw new IllegalArgumentException("Card sets not in EchoMTG set data:\n${badCardSets.sort().join('\n')}")
