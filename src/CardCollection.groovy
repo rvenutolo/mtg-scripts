@@ -24,11 +24,11 @@ class CardCollection {
     }
 
     List<CardCount> getCardCounts() {
-        cards.entrySet().collect { new CardCount(it.key, it.value) }.sort()
+        cards.entrySet().collect { new CardCount(it.key, it.value) }
     }
 
     List<CardSet> getCardSets() {
-        cards.keySet()*.set.unique().sort()
+        cards.keySet()*.set.unique()
     }
 
 }

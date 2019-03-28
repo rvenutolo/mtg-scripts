@@ -10,7 +10,7 @@ static void printNotImportedCards(final String message, final List<CardCount> ca
     System.err.println('-' * 80)
     System.err.println(message)
     System.err.println('')
-    cards.each {
+    cards.each.sort() {
         System.err.println("${it.name}${it.isFoil ? ' (FOIL)' : ''} - ${it.setCode} - ${it.count}")
     }
     System.err.println('')
@@ -104,7 +104,7 @@ final List<CardSet> badCardSets = cardCollection.cardSets.findAll {
     !(it.setCode in echoSets.keySet()) || (it.setName != echoSets[it.setCode])
 }
 if (badCardSets) {
-    throw new IllegalArgumentException("Card sets not in EchoMTG set data:\n${badCardSets.join('\n')}")
+    throw new IllegalArgumentException("Card sets not in EchoMTG set data:\n${badCardSets.sort().join('\n')}")
 }
 
 
@@ -172,7 +172,7 @@ final List<CardCount> splitCards = cardCollection.removeAll { final CardCount ca
 
 CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
     csvPrinter.printRecord('Reg Qty', 'Foil Qty', 'Name', 'Set', 'Acquired', 'Language')
-    cardCollection.cardCounts.each { final CardCount cardCount ->
+    cardCollection.cardCounts.sort().each { final CardCount cardCount ->
         csvPrinter.printRecord(
             cardCount.isFoil ? 0 : cardCount.count,
             cardCount.isFoil ? cardCount.count : 0,
