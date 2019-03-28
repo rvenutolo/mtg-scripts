@@ -2,11 +2,11 @@ class CardCollection {
 
     private final Map<Card, Integer> cards = [:].withDefault { 0 }
 
-    void addCards(final Card card, final int countToAdd) {
+    void add(final Card card, final int countToAdd) {
         cards[card] += countToAdd
     }
 
-    void removeCards(final Card card, final int countToRemove) {
+    void remove(final Card card, final int countToRemove) {
         final int currentCount = cards[card]
         if (currentCount == countToRemove) {
             cards.remove(card)
@@ -15,6 +15,12 @@ class CardCollection {
         } else {
             throw new IllegalStateException("Attempting to remove more cards than exist in collection: ${countToRemove} - ${card}")
         }
+    }
+
+    List<CardCount> removeAll(final Closure<Boolean> filter) {
+        final List<CardCount> removedCards = cardCounts.findAll(filter)
+        removedCards.each { remove(it.card, it.count) }
+        removedCards
     }
 
     List<CardCount> getCardCounts() {

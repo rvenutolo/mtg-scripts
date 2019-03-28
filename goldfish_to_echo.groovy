@@ -62,7 +62,7 @@ inputStream.withReader('UTF-8') { final Reader reader ->
             language: 'EN' // MTGGoldfish does not track language, so default to English
         )
         final count = csvRecord.get('Quantity') as int
-        cardCollection.addCards(card, count)
+        cardCollection.add(card, count)
     }
 }
 
@@ -94,7 +94,7 @@ new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
             language: csvRecord.get('Language') ?: 'EN' // if not specified, use English
         )
         final int count = csvRecord.get('Count') as int
-        cardCollection.addCards(card, count)
+        cardCollection.add(card, count)
     }
 }
 
@@ -125,20 +125,20 @@ new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
             language: 'EN' // currently dont' have any non-English to skip
         )
         final int count = csvRecord.get('Count') as int
-        cardCollection.removeCards(card, count)
         skippedCards << new CardCount(card, count)
     }
 }
 
+skippedCards.each { final CardCount cardCount ->
+    cardCollection.remove(cardCount.card, cardCount.count)
+}
 
 // MTGGoldfish CSV does not distinctly identify different artworks for basic lands,
 // and they're generally not of much value, so just remove all non-Unstable basics
 // Basic lands I care to import (ex Beta basics) are added from file elsewhere
 
-cardCollection.cardCounts.findAll {
-    it.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && it.setCode != 'UN3'
-}.each {
-    cardCollection.removeCards(it.card, it.count)
+cardCollection.removeAll { final CardCount cardCount ->
+    cardCount.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && cardCount.setCode != 'UN3'
 }
 
 
@@ -155,22 +155,16 @@ new File('cards_with_multiple_artworks.csv').withReader('UTF-8') { final Reader 
     }
 }
 
-final List<CardCount> cardsWithMultipleArtworks = cardCollection.cardCounts.findAll {
-    multipleArtworks[it.setCode].contains(it.name)
-}
-cardsWithMultipleArtworks.each {
-    cardCollection.removeCards(it.card, it.count)
+final List<CardCount> cardsWithMultipleArtworks = cardCollection.removeAll { final CardCount cardCount ->
+    multipleArtworks[cardCount.setCode].contains(cardCount.name)
 }
 
 
 // EchoMTG CSV import does not handle split cards
 // Collect these cards for output later and remove them
 
-final List<CardCount> splitCards = cardCollection.cardCounts.findAll {
-    it.name.contains('/')
-}
-splitCards.each {
-    cardCollection.removeCards(it.card, it.count)
+final List<CardCount> splitCards = cardCollection.removeAll { final CardCount cardCount ->
+    cardCount.name.contains('/')
 }
 
 
@@ -178,17 +172,17 @@ splitCards.each {
 
 CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
     csvPrinter.printRecord('Reg Qty', 'Foil Qty', 'Name', 'Set', 'Acquired', 'Language')
-    cardCollection.cardCounts.each {
+    cardCollection.cardCounts.each { final CardCount cardCount ->
         csvPrinter.printRecord(
-            it.isFoil ? 0 : it.count,
-            it.isFoil ? it.count : 0,
-            it.name,
+            cardCount.isFoil ? 0 : cardCount.count,
+            cardCount.isFoil ? cardCount.count : 0,
+            cardCount.name,
             // Echo will import successfully if using set code, but it may import the wrong set, so use full set name
             // ex: 'Dark Ritual,CST' will import as the A25 version,
             //     but 'Dark Ritual,MMQ' will import as the correct version
-            it.setName,
+            cardCount.setName,
             '', // acquired price field
-            it.language
+            cardCount.language
         )
     }
 }
