@@ -144,8 +144,6 @@ goldfishCollection.removeAll { final CardCount cardCount ->
     cardCount.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && cardCount.setCode != 'UN3'
 }
 
-
-
 // Print diff info
 
 println('Cards in MTGGoldfish not in EchoMTG')
