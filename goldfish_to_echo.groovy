@@ -10,9 +10,9 @@ static void printNotImportedCards(final String message, final List<CardCount> ca
     System.err.println('-' * 80)
     System.err.println(message)
     System.err.println('')
-    cards.each.sort() { final CardCount cardCoun ->
+    cards.sort().each { final CardCount cardCount ->
         System.err.println(
-            "${cardCoun.name}${cardCoun.isFoil ? ' (FOIL)' : ''} - ${cardCoun.setCode} - ${cardCoun.count}"
+            "${cardCount.name}${cardCount.isFoil ? ' (FOIL)' : ''} - ${cardCount.setCode} - ${cardCount.count}"
         )
     }
     System.err.println('')
@@ -71,11 +71,14 @@ inputStream.withReader('UTF-8') { final Reader reader ->
 
 // Read the EchoMTG set data to use in validation of set names and codes
 
-final Map<String, String> echoSets = [:]
+final Set<CardSet> echoSets = []
 
 new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
-        echoSets[csvRecord.get('Code')] = csvRecord.get('Name')
+        echoSets << new CardSet(
+            setName:  csvRecord.get('Name'),
+            setCode: csvRecord.get('Code')
+        )
     }
 }
 
@@ -86,12 +89,13 @@ new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader(
         'Name', 'Set Code', 'Count', 'Language'
     ).parse(reader).each { final CSVRecord csvRecord ->
+        final CardSet cardSet = new CardSet(
+            setCode: csvRecord.get('Set Code'),
+            setName: echoSets.find { it.setCode == csvRecord.get('Set Code') }?.setName ?: ''
+        )
         final Card card = new Card(
             name: csvRecord.get('Name'),
-            set: new CardSet(
-                setName: echoSets[csvRecord.get('Set Code')],
-                setCode: csvRecord.get('Set Code')
-            ),
+            set: cardSet,
             isFoil: false, // currently don't have any foils to add
             language: csvRecord.get('Language') ?: 'EN' // if not specified, use English
         )
@@ -102,9 +106,7 @@ new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
 
 // Go through collection to find set names and codes not in EchoMTG and fail if there are any
 
-final List<CardSet> badCardSets = cardCollection.cardSets.findAll { final CardSet cardSet ->
-    !(cardSet.setCode in echoSets.keySet()) || (cardSet.setName != echoSets[cardSet.setCode])
-}
+final List<CardSet> badCardSets = cardCollection.cardSets - echoSets
 if (badCardSets) {
     throw new IllegalArgumentException("Card sets not in EchoMTG set data:\n${badCardSets.sort().join('\n')}")
 }
@@ -116,13 +118,14 @@ if (badCardSets) {
 final List<CardCount> skippedCards = []
 
 new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
-    CSVFormat.DEFAULT.withHeader('Name', 'Set', 'Count').parse(reader).each { final CSVRecord csvRecord ->
+    CSVFormat.DEFAULT.withHeader('Name', 'Set Code', 'Count').parse(reader).each { final CSVRecord csvRecord ->
+        final CardSet cardSet = new CardSet(
+            setCode: csvRecord.get('Set Code'),
+            setName: echoSets.find { it.setCode == csvRecord.get('Set Code') }?.setName ?: ''
+        )
         final Card card = new Card(
             name: csvRecord.get('Name'),
-            set: new CardSet(
-                setName: echoSets[csvRecord.get('Set')],
-                setCode: csvRecord.get('Set')
-            ),
+            set: cardSet,
             isFoil: false, // currently don't have any foils to skip
             language: 'EN' // currently dont' have any non-English to skip
         )
