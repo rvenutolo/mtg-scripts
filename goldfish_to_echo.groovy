@@ -109,7 +109,7 @@ new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
 
 final List<CardSet> badCardSets = cardCollection.cardSets - echoSets
 if (badCardSets) {
-    throw new IllegalArgumentException("Card sets not in EchoMTG set data:\n${badCardSets.sort().join('\n')}")
+    throw new IllegalArgumentException("Card sets not in master EchoMTG set data:\n${badCardSets.sort().join('\n')}")
 }
 
 // There are some cards I do not want to import from MTGGoldfish to EchoMTG
