@@ -128,7 +128,11 @@ new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
             language: 'EN' // currently dont' have any non-English to skip
         )
         final int count = csvRecord.get('Count') as int
-        skippedCards << new CardCount(card, count)
+        final CardCount cardCount = new CardCount(
+            card: card,
+            count: count
+        )
+        skippedCards << cardCount
     }
 }
 
