@@ -6,4 +6,8 @@ import groovy.transform.Sortable
 class CardSet {
     String setName
     String setCode
+
+    String toString() {
+        "${setName}/${setCode}"
+    }
 }

@@ -8,4 +8,8 @@ class Card {
     @Delegate CardSet set
     boolean isFoil
     String language
+
+    String toString() {
+        "${name} ${isFoil ? '(FOIL) ' : ''} - ${set} - ${language}"
+    }
 }

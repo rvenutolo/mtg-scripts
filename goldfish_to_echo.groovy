@@ -11,9 +11,7 @@ static void printNotImportedCards(final String message, final List<CardCount> ca
     System.err.println(message)
     System.err.println('')
     cards.sort().each { final CardCount cardCount ->
-        System.err.println(
-            "${cardCount.name}${cardCount.isFoil ? ' (FOIL)' : ''} - ${cardCount.setCode} - ${cardCount.count}"
-        )
+        System.err.println(cardCount)
     }
     System.err.println('')
 }

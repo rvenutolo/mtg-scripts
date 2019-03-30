@@ -6,4 +6,8 @@ import groovy.transform.Sortable
 class CardCount {
     @Delegate Card card
     int count
+
+    String toString() {
+        "${card} - ${count}"
+    }
 }
