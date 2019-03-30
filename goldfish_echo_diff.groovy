@@ -2,19 +2,8 @@
 
 @Grab(group = 'org.apache.commons', module = 'commons-csv', version = '1.6')
 
-import groovy.transform.Canonical
-import groovy.transform.Sortable
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
-
-@Canonical
-@Sortable
-class Card {
-    String name
-    String setName
-    String setCode
-    boolean isFoil
-}
 
 if (args?.size() != 2) {
     throw new IllegalArgumentException("Expected two arguments")
@@ -23,151 +12,135 @@ if (args?.size() != 2) {
 final File goldfishFile = new File(args[0])
 final File echoFile = new File(args[1])
 
-// Read the EchoMTG set data to use in validation of set names and codes
-
-final Map<String, String> echoSets = [:]
-
-new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
-    CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
-        echoSets[csvRecord.get('Code')] = csvRecord.get('Name')
-    }
-}
-
-
-// Read MTGGoldfish collection data
-
-final List<Tuple2<Card, Integer>> goldfishList = []
-
-goldfishFile.withReader('UTF-8') { final Reader reader ->
-    CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
-        final Card card = new Card(
-            name: csvRecord.get('Card'),
-            setName: csvRecord.get('Set Name'),
-            setCode: csvRecord.get('Set ID'),
-            isFoil: csvRecord.get('Foil') == 'FOIL'
-        )
-        final int count = csvRecord.get('Quantity') as int
-        goldfishList << new Tuple2<Card, Integer>(card, count)
-    }
-}
-
-
-// Read EchoMTG collection data
-
-final List<Tuple2<Card, Integer>> echoList = []
-
-echoFile.withReader('UTF-8') { final Reader reader ->
-    // EchoMTG only supplies set names and not code, so construct a map to look up set codes
-    final Map<String, String> setNameToCodeMap = echoSets.entrySet().collectEntries { [(it.value): it.key] }
-    CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
-        final int nonFoilCount = csvRecord.get('Count') as int
-        final int foilCount = csvRecord.get('Foil') as int
-        final String name = csvRecord.get('Name')
-        final String setName = csvRecord.get('Edition')
-        final String setCode = setNameToCodeMap[setName]
-        if (nonFoilCount) {
-            final Card nonFoilCard = new Card(
-                name: name,
-                setName: setName,
-                setCode: setCode,
-                isFoil: false
-            )
-            echoList << new Tuple2<Card, Integer>(nonFoilCard, nonFoilCount)
-        }
-        if (foilCount) {
-            final Card foilCard = new Card(
-                name: name,
-                setName: setName,
-                setCode: setCode,
-                isFoil: true
-            )
-            echoList << new Tuple2<Card, Integer>(foilCard, foilCount)
-        }
-    }
-}
-
-
 // MTGGoldfish and EchoMTG do not use all the same set names and codes
 // Read data to convert MTGGoldfish set names and codes to those used by EchoMTG
 
-final Map<Tuple2<String, String>, Tuple2<String, String>> goldfishToEchoSets = [:]
+final Map<CardSet, CardSet> goldfishToEchoSets = [:]
 
 new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader(
         'Goldfish Name', 'Goldfish Code', 'Echo Name', 'Echo Code'
     ).parse(reader).each { final CSVRecord csvRecord ->
-        final Tuple2<String, String> goldfishSet =
-            new Tuple2<>(csvRecord.get('Goldfish Name'), csvRecord.get('Goldfish Code'))
-        final Tuple2<String, String> echoSet =
-            new Tuple2<>(csvRecord.get('Echo Name'), csvRecord.get('Echo Code'))
+        final CardSet goldfishSet = new CardSet(
+            setName: csvRecord.get('Goldfish Name'),
+            setCode: csvRecord.get('Goldfish Code')
+        )
+        final CardSet echoSet = new CardSet(
+            setName: csvRecord.get('Echo Name'),
+            setCode: csvRecord.get('Echo Code')
+        )
         goldfishToEchoSets[goldfishSet] = echoSet
     }
 }
 
+// Read the EchoMTG set data to use in validation of set names and codes
 
-// Update MTGGoldfish set names and codes as necessary
+final Set<CardSet> echoSets = []
+final Map<String, String> echoSetNameToCode = [:].withDefault { '' }
 
-goldfishList.collect { it.first }.each {
-    final Tuple2<String, String> goldfishSet = new Tuple2<>(it.setName, it.setCode)
-    if (goldfishSet in goldfishToEchoSets.keySet()) {
-        final Tuple2<String, String> echoSet = goldfishToEchoSets[goldfishSet]
-        it.setName = echoSet.first
-        it.setCode = echoSet.second
+new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
+        final CardSet cardSet = new CardSet(
+            setName: csvRecord.get('Name'),
+            setCode: csvRecord.get('Code')
+        )
+        echoSets << cardSet
+        echoSetNameToCode[cardSet.setName] = cardSet.setCode
     }
 }
 
+// Read MTGGoldfish collection data
 
-// Find MTGGoldfish cards with set names and codes not in EchoMTG set data and fail if there are any
+final CardCollection goldfishCollection = new CardCollection()
 
-final Set<Tuple2<String, String>> badGoldfishSets =
-    goldfishList.collect { it.first }.findAll {
-        !(it.setCode in echoSets.keySet()) || (it.setName != echoSets[it.setCode])
-    }.collect {
-        new Tuple2<String, String>(it.setCode, it.setName)
-    }.toSet()
-
-if (badGoldfishSets) {
-    final String badSetsString = badGoldfishSets.collect { "${it.second},${it.first}" }.sort().join('\n')
-    throw new IllegalArgumentException("MTGGoldfish sets not in EchoMTG set data:\n${badSetsString}")
+goldfishFile.withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
+        final CardSet goldfishSet = new CardSet(
+            setName: csvRecord.get('Set Name'),
+            setCode: csvRecord.get('Set ID')
+        )
+        final Card card = new Card(
+            name: csvRecord.get('Card'),
+            set: goldfishToEchoSets[goldfishSet] ?: goldfishSet,
+            isFoil: csvRecord.get('Foil') == 'FOIL',
+            language: 'EN' // MTGGoldfish does not track language, so default to English
+        )
+        final count = csvRecord.get('Quantity') as int
+        goldfishCollection.add(card, count)
+    }
 }
 
+// Read EchoMTG collection data
+
+final CardCollection echoCollection = new CardCollection()
+
+echoFile.withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
+        final int nonFoilCount = csvRecord.get('Count') as int
+        final int foilCount = csvRecord.get('Foil') as int
+        final String name = csvRecord.get('Name')
+        final CardSet cardSet = new CardSet(
+            setName: csvRecord.get('Edition'),
+            setCode: echoSetNameToCode[csvRecord.get('Edition')]
+        )
+        final String language = csvRecord.get('Language')
+        if (nonFoilCount) {
+            final Card nonFoilCard = new Card(
+                name: name,
+                set: cardSet,
+                isFoil: false,
+                language: language
+            )
+            echoCollection.add(nonFoilCard, nonFoilCount)
+        }
+        if (foilCount) {
+            final Card foilCard = new Card(
+                name: name,
+                set: cardSet,
+                isFoil: false,
+                language: language
+            )
+            echoCollection.add(foilCard, foilCount)
+        }
+    }
+}
+
+// Go through collections to find set names and codes not in EchoMTG and fail if there are any
+
+final List<CardSet> badGoldfishCardSets = goldfishCollection.cardSets - echoSets
+if (badGoldfishCardSets) {
+    throw new IllegalArgumentException(
+        "MTGGoldfish card sets not in master EchoMTG set data:\n${badGoldfishCardSets.sort().join('\n')}"
+    )
+}
+
+final List<CardSet> badEchoCardSets = echoCollection.cardSets - echoSets
+if (badEchoCardSets) {
+    throw new IllegalArgumentException(
+        "EchoMTG card sets not in master EchoMTG set data:\n${badEchoCardSets.sort().join('\n')}"
+    )
+}
 
 // Basic lands, aside from those from Unstable, were not included in import from MTGGoldfish into EchoMTG,
 // so remove them
-goldfishList.removeIf {
-    it.first.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && it.first.setCode != 'UN3'
+
+goldfishCollection.removeAll { final CardCount cardCount ->
+    cardCount.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && cardCount.setCode != 'UN3'
 }
 
-
-// Combine MTGGoldfish counts
-// MTGGoldfish doesn't distinctly identify multiple arts or full arts in same set,
-// but have separate entries with the same name for them, so just combine the counts
-
-final Map<Card, Integer> goldfishCardCounts = [:].withDefault { 0 }
-goldfishList.each { goldfishCardCounts[it.first] += it.second }
-
-
-// Combine EchMTG counts
-// EchoMTG puts one card per row, so need to combine the counts
-
-final Map<Card, Integer> echoCardCounts = [:].withDefault { 0 }
-echoList.each { echoCardCounts[it.first] += it.second }
 
 
 // Print diff info
 
 println('Cards in MTGGoldfish not in EchoMTG')
 println('-' * 80)
-goldfishCardCounts.findAll { final Card card, final int goldfishCount ->
-    goldfishCount > echoCardCounts[card]
-}.sort().each { final Card card, final int goldfishCount ->
-    println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${goldfishCount - echoCardCounts[card]}")
+goldfishCollection.cardCounts.findAll { final CardCount goldfishCardCount ->
+    goldfishCardCount.count > echoCollection.getCardCount(goldfishCardCount.card)
+}.collect { final CardCount goldfishCardCount ->
+    new CardCount(
+        card: goldfishCardCount.card,
+        count: goldfishCardCount.count - echoCollection.getCardCount(goldfishCardCount.card)
+    )
+}.sort().each { final CardCount diffCardCount ->
+    println(diffCardCount)
 }
-//println()
-//println('Cards in EchoMTG not in MTGGoldfish')
-//println('-' * 80)
-//echoCardCounts.findAll { final Card card, final int echoCount ->
-//    echoCount > goldfishCardCounts[card]
-//}.sort().each { final Card card, final int echoCount ->
-//    println("${card.name}${card.isFoil ? ' (FOIL)' : ''} - ${card.setName}/${card.setCode} - ${echoCount - goldfishCardCounts[card]}")
-//}
