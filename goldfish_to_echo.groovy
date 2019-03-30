@@ -6,16 +6,6 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVRecord
 
-static void printNotImportedCards(final String message, final List<CardCount> cards) {
-    System.err.println('-' * 80)
-    System.err.println(message)
-    System.err.println('')
-    cards.sort().each { final CardCount cardCount ->
-        System.err.println(cardCount)
-    }
-    System.err.println('')
-}
-
 if (args && args.size() != 1) {
     throw new IllegalArgumentException("Expected at most one argument: ${args}")
 }
@@ -189,6 +179,18 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
             cardCount.language
         )
     }
+}
+
+// Closure to print to stderr
+
+final Closure printNotImportedCards = { final String message, final List<CardCount> cards ->
+    System.err.println('-' * 80)
+    System.err.println(message)
+    System.err.println('')
+    cards.sort().each { final CardCount cardCount ->
+        System.err.println(cardCount)
+    }
+    System.err.println('')
 }
 
 // Output cards I need to handle manually to stderr
