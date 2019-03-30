@@ -70,15 +70,19 @@ inputStream.withReader('UTF-8') { final Reader reader ->
 // Read the EchoMTG set data to use in validation of set names and codes
 
 final Set<CardSet> echoSets = []
+final Map<String, String> echoSetCodeToName = [:].withDefault { '' }
 
 new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
-        echoSets << new CardSet(
+        final CardSet cardSet = new CardSet(
             setName: csvRecord.get('Name'),
             setCode: csvRecord.get('Code')
         )
+        echoSets << cardSet
+        echoSetCodeToName[cardSet.setCode] = cardSet.setName
     }
 }
+
 
 // Add some cards to collection, such as non-English cards and Beta basics
 
@@ -88,7 +92,7 @@ new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
     ).parse(reader).each { final CSVRecord csvRecord ->
         final CardSet cardSet = new CardSet(
             setCode: csvRecord.get('Set Code'),
-            setName: echoSets.find { it.setCode == csvRecord.get('Set Code') }?.setName ?: ''
+            setName: echoSetCodeToName[csvRecord.get('Set Code')]
         )
         final Card card = new Card(
             name: csvRecord.get('Name'),
@@ -117,7 +121,7 @@ new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Set Code', 'Count').parse(reader).each { final CSVRecord csvRecord ->
         final CardSet cardSet = new CardSet(
             setCode: csvRecord.get('Set Code'),
-            setName: echoSets.find { it.setCode == csvRecord.get('Set Code') }?.setName ?: ''
+            setName: echoSetCodeToName[csvRecord.get('Set Code')]
         )
         final Card card = new Card(
             name: csvRecord.get('Name'),
