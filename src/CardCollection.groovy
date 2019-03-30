@@ -31,4 +31,8 @@ class CardCollection {
         cards.keySet()*.set.unique()
     }
 
+    int getCardCount(final Card card) {
+        cards[card]
+    }
+
 }
