@@ -74,14 +74,30 @@ goldfishFile.withReader('UTF-8') { final Reader reader ->
 
 final CardCollection echoCollection = new CardCollection()
 
+final Closure cleanEchoSetName = { final String inputSetName ->
+    // some set names have trailing spaces
+    String cleanedSetName = inputSetName.trim()
+    // for 'Buy-A-Box' -> 'Buy-a-box'
+    cleanedSetName = cleanedSetName.replace('-A-', '-a-')
+    if (cleanedSetName == cleanedSetName.toUpperCase()) {
+        // some set names are all uppercase, covert to lowercase then capitalize
+        cleanedSetName = cleanedSetName.toLowerCase().split(' ').collect {
+            it in ['of', 'the'] ? it : it.capitalize()
+        }.join(' ')
+    }
+    cleanedSetName
+}
+
 echoFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
         final int nonFoilCount = csvRecord.get('Count') as int
         final int foilCount = csvRecord.get('Foil') as int
         final String name = csvRecord.get('Name')
+        final String setName = cleanEchoSetName(csvRecord.get('Edition'))
+        final String setCode = echoSetNameToCode[setName]
         final CardSet cardSet = new CardSet(
-            setName: csvRecord.get('Edition'),
-            setCode: echoSetNameToCode[csvRecord.get('Edition')]
+            setName: setName,
+            setCode: setCode
         )
         final String language = csvRecord.get('Language')
         if (nonFoilCount) {
