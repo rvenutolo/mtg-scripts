@@ -43,7 +43,6 @@ new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader 
     }
 }
 
-
 // Read MTGGoldfish collection to import to EchoMTG,
 // converting sets as necessary
 
@@ -68,7 +67,6 @@ inputStream.withReader('UTF-8') { final Reader reader ->
     }
 }
 
-
 // Read the EchoMTG set data to use in validation of set names and codes
 
 final Set<CardSet> echoSets = []
@@ -76,12 +74,11 @@ final Set<CardSet> echoSets = []
 new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
         echoSets << new CardSet(
-            setName:  csvRecord.get('Name'),
+            setName: csvRecord.get('Name'),
             setCode: csvRecord.get('Code')
         )
     }
 }
-
 
 // Add some cards to collection, such as non-English cards and Beta basics
 
@@ -110,7 +107,6 @@ final List<CardSet> badCardSets = cardCollection.cardSets - echoSets
 if (badCardSets) {
     throw new IllegalArgumentException("Card sets not in EchoMTG set data:\n${badCardSets.sort().join('\n')}")
 }
-
 
 // There are some cards I do not want to import from MTGGoldfish to EchoMTG
 // Read and remove those cards
@@ -146,7 +142,6 @@ cardCollection.removeAll { final CardCount cardCount ->
     cardCount.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && cardCount.setCode != 'UN3'
 }
 
-
 // There are a number of cards that have multiple artworks in the same set
 // Ex: Hymn to Tourach and High Tide in Fallen Empires
 // The MTGGoldfish CSV does not distinctly identify these
@@ -164,14 +159,12 @@ final List<CardCount> cardsWithMultipleArtworks = cardCollection.removeAll { fin
     multipleArtworks[cardCount.setCode].contains(cardCount.name)
 }
 
-
 // EchoMTG CSV import does not handle split cards
 // Collect these cards for output later and remove them
 
 final List<CardCount> splitCards = cardCollection.removeAll { final CardCount cardCount ->
     cardCount.name.contains('/')
 }
-
 
 // Output cards to import to EchoMTG to stdout
 
@@ -192,12 +185,10 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
     }
 }
 
-
 // Output cards I need to handle manually to stderr
 
 printNotImportedCards('Cards with multiple artworks in set', cardsWithMultipleArtworks)
 printNotImportedCards('Split cards', splitCards)
-
 
 // Output skipped cards to stderr
 
