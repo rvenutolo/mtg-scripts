@@ -156,11 +156,6 @@ if (badGoldfishCardSets) {
 
 final List<CardSet> badEchoCardSets = echoCollection.cardSets - echoSets
 if (badEchoCardSets) {
-
-    System.err.println('EchoMTG cards with sets not in master EchoMTG set data')
-    System.err.println('-' * 80)
-    echoCollection.cardCounts.findAll { it.set in badEchoCardSets }.sort().each { System.err.println(it) }
-
     throw new IllegalArgumentException(
         "EchoMTG card sets not in master EchoMTG set data:\n${badEchoCardSets.sort().join('\n')}"
     )
