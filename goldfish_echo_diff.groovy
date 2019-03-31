@@ -139,7 +139,7 @@ echoFile.withReader('UTF-8') { final Reader reader ->
             final Card foilCard = new Card(
                 name: name,
                 set: cardSet,
-                isFoil: false,
+                isFoil: true,
                 language: language
             )
             echoCollection.add(foilCard, foilCount)
