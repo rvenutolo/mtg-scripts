@@ -36,6 +36,7 @@ new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader 
 // Read the EchoMTG set data to use in validation of set names and codes
 
 final Set<CardSet> echoSets = []
+final Map<String, String> echoSetCodeToName = [:].withDefault { '' }
 final Map<String, String> echoSetNameToCode = [:].withDefault { '' }
 
 new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
@@ -45,6 +46,7 @@ new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
             setCode: csvRecord.get('Code')
         )
         echoSets << cardSet
+        echoSetCodeToName[cardSet.setCode] = cardSet.setName
         echoSetNameToCode[cardSet.setName] = cardSet.setCode
     }
 }
@@ -166,6 +168,36 @@ if (badEchoCardSets) {
 
 goldfishCollection.removeAll { final CardCount cardCount ->
     cardCount.name in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] && cardCount.setCode != 'UN3'
+}
+
+// There are some cards I did not import from MTGGoldfish to EchoMTG
+// Read and remove those cards
+
+final List<CardCount> skippedCards = []
+
+new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
+    CSVFormat.DEFAULT.withHeader('Name', 'Set Code', 'Count').parse(reader).each { final CSVRecord csvRecord ->
+        final CardSet cardSet = new CardSet(
+            setCode: csvRecord.get('Set Code'),
+            setName: echoSetCodeToName[csvRecord.get('Set Code')]
+        )
+        final Card card = new Card(
+            name: csvRecord.get('Name'),
+            set: cardSet,
+            isFoil: false, // currently don't have any foils to skip
+            language: 'EN' // currently dont' have any non-English to skip
+        )
+        final int count = csvRecord.get('Count') as int
+        final CardCount cardCount = new CardCount(
+            card: card,
+            count: count
+        )
+        skippedCards << cardCount
+    }
+}
+
+skippedCards.each { final CardCount cardCount ->
+    goldfishCollection.remove(cardCount.card, cardCount.count)
 }
 
 // Print diff info
