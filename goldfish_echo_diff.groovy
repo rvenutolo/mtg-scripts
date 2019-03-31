@@ -99,51 +99,42 @@ final Closure cleanEchoSetName = { final String inputSetName ->
 
 echoFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
-        final int nonFoilCount = csvRecord.get('Count') as int
-        final int foilCount = csvRecord.get('Foil') as int
+
+        final int count = csvRecord.get('Count') as int
         final String name = cleanEchoCardName(csvRecord.get('Name'))
+        final boolean isFoil = csvRecord.get('Foil') == '1'
         final String setName = cleanEchoSetName(csvRecord.get('Edition'))
-        final String setCode = echoSetNameToCode[setName]
         final CardSet cardSet = new CardSet(
             setName: setName,
-            setCode: setCode
+            setCode: echoSetNameToCode[setName]
         )
         final String language = csvRecord.get('Language')
+
+        // These require special handling as the rows are missing the set name column entirely, including delimiter
         if (name == 'Azorius Guildgate') {
-            // These are missing the set name column entirely, including delimiter (wtf?)
-            final CardSet rnaCardSet = new CardSet(
-                setCode: 'RNA',
-                setName: 'Ravnica Allegiance'
-            )
             // Currently I only have English non-foil
-            // The columns after the foil count column are all off, so just hardcode in values
+            // The columns after the foil column are all off, so just hardcode in values
             final Card azoriusGuildgateCard = new Card(
                 name: 'Azorius Guildgate',
-                set: rnaCardSet,
+                set: new CardSet(
+                    setCode: 'RNA',
+                    setName: 'Ravnica Allegiance'
+                ),
                 isFoil: false,
                 language: 'EN'
             )
-            echoCollection.add(azoriusGuildgateCard, nonFoilCount)
+            echoCollection.add(azoriusGuildgateCard, count)
             return
         }
-        if (nonFoilCount) {
-            final Card nonFoilCard = new Card(
-                name: name,
-                set: cardSet,
-                isFoil: false,
-                language: language
-            )
-            echoCollection.add(nonFoilCard, nonFoilCount)
-        }
-        if (foilCount) {
-            final Card foilCard = new Card(
-                name: name,
-                set: cardSet,
-                isFoil: true,
-                language: language
-            )
-            echoCollection.add(foilCard, foilCount)
-        }
+
+        final Card card = new Card(
+            name: name,
+            set: cardSet,
+            isFoil: isFoil,
+            language: language
+        )
+        echoCollection.add(card, count)
+
     }
 }
 
@@ -214,3 +205,4 @@ goldfishCollection.cardCounts.findAll { final CardCount goldfishCardCount ->
 }.sort().each { final CardCount diffCardCount ->
     println(diffCardCount)
 }
+
