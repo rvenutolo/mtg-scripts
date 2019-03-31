@@ -1,5 +1,3 @@
-#!/usr/bin/env groovy
-
 @Grab(group = 'org.apache.commons', module = 'commons-csv', version = '1.6')
 
 import org.apache.commons.csv.CSVFormat
