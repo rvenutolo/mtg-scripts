@@ -98,6 +98,11 @@ FEM,Thorn Thallid
 FEM,Tidal Flats
 FEM,Vodalian Mage
 FEM,Vodalian Soldiers
+GRN,Boros Guildgate
+GRN,Dimir Guildgate
+GRN,Golgari Guildgate
+GRN,Izzet Guildgate
+GRN,Selesnya Guildgate
 HML,Abbey Matron
 HML,Aliban's Tower
 HML,Ambush Party
@@ -126,3 +131,8 @@ HML,Willow Faerie
 PLS,"Ertai, the Corrupted"
 PLS,Skyship Weatherlight
 PLS,"Tahngarth, Talruum Hero"
+RNA,Azorius Guildgate
+RNA,Gruul Guildgate
+RNA,Orzhov Guildgate
+RNA,Rakdos Guildgate
+RNA,Simic Guildgate
