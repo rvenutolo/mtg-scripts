@@ -74,6 +74,13 @@ goldfishFile.withReader('UTF-8') { final Reader reader ->
 
 final CardCollection echoCollection = new CardCollection()
 
+final Closure cleanEchoCardName = { final String inputCardName ->
+    // Some cards in Echo start with 'AE' like 'AEther Vial'
+    // Standardize on 'Aether'
+    final String cleanedCardName = inputCardName.replace('AEther', 'Aether')
+    cleanedCardName
+}
+
 final Closure cleanEchoSetName = { final String inputSetName ->
     // Some set names have trailing spaces
     String cleanedSetName = inputSetName.trim()
@@ -92,7 +99,7 @@ echoFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader).each { final CSVRecord csvRecord ->
         final int nonFoilCount = csvRecord.get('Count') as int
         final int foilCount = csvRecord.get('Foil') as int
-        final String name = csvRecord.get('Name')
+        final String name = cleanEchoCardName(csvRecord.get('Name'))
         final String setName = cleanEchoSetName(csvRecord.get('Edition'))
         final String setCode = echoSetNameToCode[setName]
         final CardSet cardSet = new CardSet(
