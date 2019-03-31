@@ -10,6 +10,6 @@ class Card {
     String language
 
     String toString() {
-        "${name} ${isFoil ? '(FOIL) ' : ''} - ${set} - ${language}"
+        "${name} ${isFoil ? '(FOIL) ' : ''}- ${set} - ${language}"
     }
 }
