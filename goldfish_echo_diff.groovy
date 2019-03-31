@@ -75,12 +75,12 @@ goldfishFile.withReader('UTF-8') { final Reader reader ->
 final CardCollection echoCollection = new CardCollection()
 
 final Closure cleanEchoSetName = { final String inputSetName ->
-    // some set names have trailing spaces
+    // Some set names have trailing spaces
     String cleanedSetName = inputSetName.trim()
-    // for 'Buy-A-Box' -> 'Buy-a-box'
+    // For 'Buy-A-Box' -> 'Buy-a-box'
     cleanedSetName = cleanedSetName.replace('-A-', '-a-')
     if (cleanedSetName == cleanedSetName.toUpperCase()) {
-        // some set names are all uppercase, covert to lowercase then capitalize
+        // Some set names are all uppercase, covert to lowercase then capitalize
         cleanedSetName = cleanedSetName.toLowerCase().split(' ').collect {
             it in ['of', 'the'] ? it : it.capitalize()
         }.join(' ')
@@ -100,6 +100,23 @@ echoFile.withReader('UTF-8') { final Reader reader ->
             setCode: setCode
         )
         final String language = csvRecord.get('Language')
+        if (name == 'Azorius Guildgate') {
+            // These are missing the set name column entirely, including delimiter (wtf?)
+            final CardSet rnaCardSet = new CardSet(
+                setCode: 'RNA',
+                setName: 'Ravnica Allegiance'
+            )
+            // Currently I only have English non-foil
+            // The columns after the foil count column are all off, so just hardcode in values
+            final Card azoriusGuildgateCard = new Card(
+                name: 'Azorius Guildgate',
+                set: rnaCardSet,
+                isFoil: false,
+                language: 'EN'
+            )
+            echoCollection.add(azoriusGuildgateCard, nonFoilCount)
+            return
+        }
         if (nonFoilCount) {
             final Card nonFoilCard = new Card(
                 name: name,
@@ -132,6 +149,11 @@ if (badGoldfishCardSets) {
 
 final List<CardSet> badEchoCardSets = echoCollection.cardSets - echoSets
 if (badEchoCardSets) {
+
+    System.err.println('EchoMTG cards with sets not in master EchoMTG set data')
+    System.err.println('-' * 80)
+    echoCollection.cardCounts.findAll { it.set in badEchoCardSets }.sort().each { System.err.println(it) }
+
     throw new IllegalArgumentException(
         "EchoMTG card sets not in master EchoMTG set data:\n${badEchoCardSets.sort().join('\n')}"
     )
