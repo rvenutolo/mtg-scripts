@@ -10,7 +10,8 @@ if (args?.size() != 2) {
 final File goldfishFile = new File(args[0])
 final File echoFile = new File(args[1])
 
-final File csvDir = new File(getClass().protectionDomain.codeSource.location.path).parentFile.parentFile
+final File rootDir = new File(getClass().protectionDomain.codeSource.location.path).parentFile.parentFile
+final File csvDir = new File(rootDir, 'csv_files')
 
 final File goldfishToEchoSetsFile = new File(csvDir, 'goldfish_to_echo_sets.csv')
 final File echoSetsFile = new File(csvDir, 'echo_sets.csv')

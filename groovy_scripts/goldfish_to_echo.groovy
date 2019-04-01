@@ -8,7 +8,8 @@ if (args && args.size() != 1) {
     throw new IllegalArgumentException("Expected at most one argument: ${args}")
 }
 
-final File csvDir = new File(getClass().protectionDomain.codeSource.location.path).parentFile.parentFile
+final File rootDir = new File(getClass().protectionDomain.codeSource.location.path).parentFile.parentFile
+final File csvDir = new File(rootDir, 'csv_files')
 
 final File goldfishToEchoSetsFile = new File(csvDir, 'goldfish_to_echo_sets.csv')
 final File echoSetsFile = new File(csvDir, 'echo_sets.csv')
