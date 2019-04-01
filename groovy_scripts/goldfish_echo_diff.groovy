@@ -92,7 +92,7 @@ final Closure cleanEchoSetName = { final String inputSetName ->
     String cleanedSetName = inputSetName.trim()
     // For 'Buy-A-Box' -> 'Buy-a-box'
     cleanedSetName = cleanedSetName.replace('-A-', '-a-')
-    if (cleanedSetName == cleanedSetName.toUpperCase()) {
+    if (cleanedSetName ==~ /^[\p{Upper}\s]+$/) {
         // Some set names are all uppercase, covert to lowercase then capitalize
         cleanedSetName = cleanedSetName.toLowerCase().split(' ').collect {
             it in ['of', 'the'] ? it : it.capitalize()
