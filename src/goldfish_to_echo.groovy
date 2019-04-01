@@ -8,12 +8,20 @@ if (args && args.size() != 1) {
     throw new IllegalArgumentException("Expected at most one argument: ${args}")
 }
 
+final File csvDir = new File(getClass().protectionDomain.codeSource.location.path).parentFile.parentFile
+
+final File goldfishToEchoSetsFile = new File(csvDir, 'goldfish_to_echo_sets.csv')
+final File echoSetsFile = new File(csvDir, 'echo_sets.csv')
+final File addToEchoImportFile = new File(csvDir, 'add_to_echo_import.csv')
+final File skipInImportFile = new File(csvDir, 'skip_in_echo_import.csv')
+final File multipleArtworksFile = new File(csvDir, 'cards_with_multiple_artworks.csv')
+
 // MTGGoldfish and EchoMTG do not use all the same set names and codes
 // Read data to convert MTGGoldfish set names and codes to those used by EchoMTG
 
 final Map<CardSet, CardSet> goldfishToEchoSets = [:]
 
-new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader ->
+goldfishToEchoSetsFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader(
         'Goldfish Name', 'Goldfish Code', 'Echo Name', 'Echo Code'
     ).parse(reader).each { final CSVRecord csvRecord ->
@@ -58,7 +66,7 @@ inputStream.withReader('UTF-8') { final Reader reader ->
 final Set<CardSet> echoSets = []
 final Map<String, String> echoSetCodeToName = [:].withDefault { '' }
 
-new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
+echoSetsFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
         final CardSet cardSet = new CardSet(
             setName: csvRecord.get('Name'),
@@ -72,7 +80,7 @@ new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
 
 // Add some cards to collection, such as non-English cards and Beta basics
 
-new File('add_to_echo_import.csv').withReader('UTF-8') { final Reader reader ->
+addToEchoImportFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader(
         'Name', 'Set Code', 'Count', 'Language'
     ).parse(reader).each { final CSVRecord csvRecord ->
@@ -103,7 +111,7 @@ if (badCardSets) {
 
 final List<CardCount> skippedCards = []
 
-new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
+skipInImportFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Set Code', 'Count').parse(reader).each { final CSVRecord csvRecord ->
         final CardSet cardSet = new CardSet(
             setCode: csvRecord.get('Set Code'),
@@ -143,7 +151,7 @@ cardCollection.removeAll { final CardCount cardCount ->
 
 final Map<String, List<String>> multipleArtworks = [:].withDefault { [] }
 
-new File('cards_with_multiple_artworks.csv').withReader('UTF-8') { final Reader reader ->
+multipleArtworksFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Set', 'Name').parse(reader).each { final CSVRecord csvRecord ->
         multipleArtworks[csvRecord.get('Set').trim()] << csvRecord.get('Name').trim()
     }

@@ -10,12 +10,18 @@ if (args?.size() != 2) {
 final File goldfishFile = new File(args[0])
 final File echoFile = new File(args[1])
 
+final File csvDir = new File(getClass().protectionDomain.codeSource.location.path).parentFile.parentFile
+
+final File goldfishToEchoSetsFile = new File(csvDir, 'goldfish_to_echo_sets.csv')
+final File echoSetsFile = new File(csvDir, 'echo_sets.csv')
+final File skipInImportFile = new File(csvDir, 'skip_in_echo_import.csv')
+
 // MTGGoldfish and EchoMTG do not use all the same set names and codes
 // Read data to convert MTGGoldfish set names and codes to those used by EchoMTG
 
 final Map<CardSet, CardSet> goldfishToEchoSets = [:]
 
-new File('goldfish_to_echo_sets.csv').withReader('UTF-8') { final Reader reader ->
+goldfishToEchoSetsFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader(
         'Goldfish Name', 'Goldfish Code', 'Echo Name', 'Echo Code'
     ).parse(reader).each { final CSVRecord csvRecord ->
@@ -37,7 +43,7 @@ final Set<CardSet> echoSets = []
 final Map<String, String> echoSetCodeToName = [:].withDefault { '' }
 final Map<String, String> echoSetNameToCode = [:].withDefault { '' }
 
-new File('echo_sets.csv').withReader('UTF-8') { final Reader reader ->
+echoSetsFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Code').parse(reader).each { final CSVRecord csvRecord ->
         final CardSet cardSet = new CardSet(
             setName: csvRecord.get('Name'),
@@ -164,7 +170,7 @@ goldfishCollection.removeAll { final CardCount cardCount ->
 
 final List<CardCount> skippedCards = []
 
-new File('skip_in_echo_import.csv').withReader('UTF-8') { final Reader reader ->
+skipInImportFile.withReader('UTF-8') { final Reader reader ->
     CSVFormat.DEFAULT.withHeader('Name', 'Set Code', 'Count').parse(reader).each { final CSVRecord csvRecord ->
         final CardSet cardSet = new CardSet(
             setCode: csvRecord.get('Set Code'),
