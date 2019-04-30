@@ -29,3 +29,23 @@ inputStream.withReader('UTF-8') { final Reader reader ->
         cardCollection.add(card, count)
     }
 }
+
+// Assemble a map of card names to a list of sets in which those cards appear
+
+final Map<String, Collection<CardSet>> cardToSets = [:].withDefault { [] }
+
+cardCollection.cardCounts.each { final CardCount cardCount ->
+    cardToSets[cardCount.name] << cardCount.set
+}
+
+// Remove all cards that appear in only one set
+
+cardToSets.removeAll { final Map.Entry<String, Collection<CardSet>> entry ->
+    entry.value.size() == 1
+}
+
+// Remove all basic lands
+
+cardToSets.removeAll { final Map.Entry<String, Collection<CardSet>> entry ->
+    entry.key in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes']
+}
