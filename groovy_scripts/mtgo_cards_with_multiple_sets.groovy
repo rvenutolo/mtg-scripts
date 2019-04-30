@@ -49,3 +49,7 @@ cardToSets.removeAll { final Map.Entry<String, Collection<CardSet>> entry ->
 cardToSets.removeAll { final Map.Entry<String, Collection<CardSet>> entry ->
     entry.key in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes']
 }
+
+cardToSets.sort().each { final String card, final Collection<CardSet> cardSets ->
+    println("${card} - ${cardSets*.setName.sort().join(', ')}")
+}
