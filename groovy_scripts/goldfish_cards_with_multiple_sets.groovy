@@ -26,7 +26,11 @@ inputStream.withReader('UTF-8') { final Reader reader ->
             language: 'EN' // MTGGoldfish does not track language, so default to English
         )
         final count = csvRecord.get('Quantity') as int
-        cardCollection.add(card, count)
+        if (count > 0) {
+            // Goldfish data will have 0 quantity cards
+            cardCollection.add(card, count)
+        }
+
     }
 }
 
