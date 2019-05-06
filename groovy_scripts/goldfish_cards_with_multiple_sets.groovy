@@ -51,7 +51,7 @@ cardToSets.removeAll { final Map.Entry<String, Collection<CardSet>> entry ->
 // Remove all basic lands
 
 cardToSets.removeAll { final Map.Entry<String, Collection<CardSet>> entry ->
-    entry.key in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes']
+    entry.key in ['Forest', 'Island', 'Mountain', 'Plains', 'Swamp', 'Wastes'] || entry.key.startsWith('Snow-Covered')
 }
 
 cardToSets.sort().each { final String card, final Collection<CardSet> cardSets ->
