@@ -201,18 +201,27 @@ skippedCards.each { final CardCount cardCount ->
     goldfishCollection.remove(cardCount.card, cardCount.count)
 }
 
+// Closure to print diff
+
+final Closure printNotImportedCards = {
+    final String message, final CardCollection thisCollection, final CardCollection otherCollection ->
+        println(message)
+        println('-' * 80)
+        thisCollection.cardCounts.findAll { final CardCount cardCount ->
+            cardCount.count > otherCollection.getCardCount(cardCount.card)
+        }.collect { final CardCount cardCount ->
+            new CardCount(
+                card: cardCount.card,
+                count: cardCount.count - otherCollection.getCardCount(cardCount.card)
+            )
+        }.sort().each { final CardCount diffCardCount ->
+            println(diffCardCount)
+        }
+}
+
 // Print diff info
 
-println('Cards in MTGGoldfish not in EchoMTG')
-println('-' * 80)
-goldfishCollection.cardCounts.findAll { final CardCount goldfishCardCount ->
-    goldfishCardCount.count > echoCollection.getCardCount(goldfishCardCount.card)
-}.collect { final CardCount goldfishCardCount ->
-    new CardCount(
-        card: goldfishCardCount.card,
-        count: goldfishCardCount.count - echoCollection.getCardCount(goldfishCardCount.card)
-    )
-}.sort().each { final CardCount diffCardCount ->
-    println(diffCardCount)
-}
+printNotImportedCards('Cards in MTGGoldfish not in EchoMTG', goldfishCollection, echoCollection)
+println('')
+printNotImportedCards('Cards in EchoMTG not in MTGGoldfish', echoCollection, goldfishCollection)
 
