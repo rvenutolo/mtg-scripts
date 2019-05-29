@@ -165,13 +165,6 @@ final List<CardCount> cardsWithMultipleArtworks = cardCollection.removeAll { fin
     multipleArtworks[cardCount.setCode].contains(cardCount.name)
 }
 
-// EchoMTG CSV import does not handle split cards
-// Collect these cards for output later and remove them
-
-final List<CardCount> splitCards = cardCollection.removeAll { final CardCount cardCount ->
-    cardCount.name.contains('/')
-}
-
 // Output cards to import to EchoMTG to stdout
 
 CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
@@ -206,7 +199,6 @@ final Closure printNotImportedCards = { final String message, final List<CardCou
 // Output cards I need to handle manually to stderr
 
 printNotImportedCards('Cards with multiple artworks in set', cardsWithMultipleArtworks)
-printNotImportedCards('Split cards', splitCards)
 
 // Output skipped cards to stderr
 
