@@ -174,10 +174,7 @@ CSVFormat.DEFAULT.printer().withCloseable { final CSVPrinter csvPrinter ->
             cardCount.isFoil ? 0 : cardCount.count,
             cardCount.isFoil ? cardCount.count : 0,
             cardCount.name,
-            // Echo will import successfully if using set code, but it may import the wrong set, so use full set name
-            // ex: 'Dark Ritual,CST' will import as the A25 version,
-            //     but 'Dark Ritual,MMQ' will import as the correct version
-            cardCount.setName,
+            cardCount.setCode, // set code seems to work better than set name
             '', // acquired price field
             cardCount.language
         )
